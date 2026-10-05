@@ -1,0 +1,10 @@
+bin/
+obj/
+artifacts/
+.vs/
+*.user
+client_secret*.json
+TestResults/
+*.suo
+google-oauth-client.json
+config/*.local.txt

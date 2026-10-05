@@ -1,0 +1,6 @@
+# 程式更新來源：已安裝的電腦會到這裡找新版本。只需要改這一行（第一個不是 # 開頭的行）。
+# 可用的寫法：
+#   GitHub Releases：            https://github.com/<帳號>/<儲存庫>（上傳需要使用者環境變數 REGISTRATIONADMIN_GITHUB_TOKEN）
+#   資料夾（本機或共用資料夾）： C:\RegistrationAdmin-updates   或   \\伺服器\共用資料夾\RegistrationAdmin
+# 本機實際值請寫在 config/update-feed.local.txt（不進版控，publish.ps1 會優先使用）；這個檔案只是範本。
+# 修改後需要重新執行 scripts\publish.ps1 並重新安裝一次，之後的版本才會到新的位置找更新。

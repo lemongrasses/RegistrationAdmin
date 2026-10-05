@@ -1,0 +1,556 @@
+<UserControl x:Class="RegistrationAdmin.App.Views.RegistrationDetailView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <UserControl.Resources>
+    <!-- 原始值：可選取複製、不能編輯、沒有輸入框外觀 -->
+    <Style x:Key="ReadOnlyValue" TargetType="TextBox">
+      <Setter Property="IsReadOnly" Value="True" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="FontSize" Value="15" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+      <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+      <Setter Property="IsTabStop" Value="False" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="TextBox">
+            <ScrollViewer x:Name="PART_ContentHost" Focusable="False" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden" />
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style x:Key="SectionBlock" TargetType="StackPanel">
+      <Setter Property="Margin" Value="0,20,0,0" />
+    </Style>
+
+    <Style x:Key="Field" TargetType="StackPanel">
+      <Setter Property="Margin" Value="0,0,0,12" />
+    </Style>
+
+    <Style x:Key="SubExpander" TargetType="Expander" BasedOn="{StaticResource {x:Type Expander}}">
+      <Setter Property="Margin" Value="0,4,0,0" />
+      <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}" />
+    </Style>
+
+    <Style x:Key="Divider" TargetType="Border">
+      <Setter Property="Height" Value="1" />
+      <Setter Property="Background" Value="{StaticResource DividerBrush}" />
+      <Setter Property="Margin" Value="0,20,0,0" />
+    </Style>
+  </UserControl.Resources>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <!-- ── 頁首：返回、標題、唯一主要按鈕 ── -->
+    <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,0,0,1" Padding="24,12,24,14">
+      <Grid MaxWidth="1440">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <StackPanel>
+          <Button Style="{StaticResource TextButton}" HorizontalAlignment="Left" Margin="-8,0,0,4" MinHeight="32"
+                  Command="{Binding DataContext.BackToListCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                  ToolTip="回到名單（Alt+←）" AutomationProperties.Name="回到名單">
+            <StackPanel Orientation="Horizontal">
+              <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" VerticalAlignment="Center" Margin="0,1,8,0" />
+              <TextBlock Text="回到名單" />
+            </StackPanel>
+          </Button>
+          <WrapPanel>
+            <TextBlock Style="{StaticResource PageTitle}" Text="{Binding DisplayName}" VerticalAlignment="Center" Margin="0,0,12,0" />
+            <Border Style="{StaticResource Chip}" Background="{Binding StatusTone, Converter={StaticResource ToneBackground}}" Margin="0,4,8,0">
+              <TextBlock Style="{StaticResource ChipText}" Text="{Binding StatusLabel}" Foreground="{Binding StatusTone, Converter={StaticResource ToneForeground}}" />
+            </Border>
+            <Border Style="{StaticResource Chip}" Margin="0,4,0,0" Visibility="{Binding IsArchived, Converter={StaticResource BoolToVisibility}}">
+              <TextBlock Style="{StaticResource ChipText}" Text="已封存" />
+            </Border>
+          </WrapPanel>
+          <TextBlock Style="{StaticResource Muted}" Text="{Binding SubTitle}" Margin="0,2,0,0" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom" Margin="16,0,0,0">
+          <TextBlock Text="● 有尚未儲存的變更" Foreground="{StaticResource WarningBrush}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,16,0"
+                     Visibility="{Binding IsDirty, Converter={StaticResource BoolToVisibility}}" />
+          <Button Content="取消變更" Margin="0,0,8,0" IsEnabled="{Binding IsDirty}"
+                  Command="{Binding DataContext.DiscardChangesCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+          <Button Style="{StaticResource PrimaryButton}" Content="儲存變更" MinWidth="120" ToolTip="寫入 Google 試算表（Ctrl+S）"
+                  Command="{Binding DataContext.SaveCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- ── 內容：左原始資料（唯讀）、右處理 ── -->
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+      <Grid Margin="24,16,24,96" MaxWidth="1440">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" MinWidth="320" />
+          <ColumnDefinition Width="20" />
+          <ColumnDefinition Width="*" MinWidth="360" />
+        </Grid.ColumnDefinitions>
+
+        <!-- 問題摘要 -->
+        <Border Grid.ColumnSpan="3" CornerRadius="10" BorderThickness="1" Padding="16,12" Margin="0,0,0,16"
+                Visibility="{Binding HasIssues, Converter={StaticResource BoolToVisibility}}">
+          <Border.Style>
+            <Style TargetType="Border">
+              <Setter Property="Background" Value="{StaticResource WarningBannerBrush}" />
+              <Setter Property="BorderBrush" Value="{StaticResource WarningBannerBorderBrush}" />
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding HasErrors}" Value="True">
+                  <Setter Property="Background" Value="{StaticResource ErrorBannerBrush}" />
+                  <Setter Property="BorderBrush" Value="{StaticResource ErrorBannerBorderBrush}" />
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </Border.Style>
+          <DockPanel>
+            <Border DockPanel.Dock="Left" Width="24" Height="24" CornerRadius="12" Background="{StaticResource WarningBrush}" VerticalAlignment="Top" Margin="0,0,12,0">
+              <TextBlock Text="!" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <StackPanel>
+              <TextBlock Text="{Binding IssueBannerTitle}" FontWeight="SemiBold" />
+              <TextBlock Text="{Binding IssueBannerSummary}" Foreground="{StaticResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,2,0,0" />
+            </StackPanel>
+          </DockPanel>
+        </Border>
+
+        <!-- 左：原始報名資料（唯讀） -->
+        <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource ReadOnlyCard}" VerticalAlignment="Top">
+          <StackPanel>
+            <WrapPanel>
+              <TextBlock Style="{StaticResource SectionTitle}" Text="原始報名資料" Margin="0,0,10,0" VerticalAlignment="Center" />
+              <Border Style="{StaticResource Chip}" Background="{StaticResource NeutralChipBrush}">
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="&#xE72E;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" VerticalAlignment="Center" Margin="0,1,5,0"
+                             Foreground="{StaticResource NeutralChipTextBrush}" />
+                  <TextBlock Style="{StaticResource ChipText}" Text="原始資料・唯讀" />
+                </StackPanel>
+              </Border>
+            </WrapPanel>
+            <TextBlock Style="{StaticResource Hint}" Text="內容來自 Google Form，這裡只能查看；後台不會修改原始回應。" />
+
+            <TextBlock Style="{StaticResource InlineError}" Margin="0,12,0,0"
+                       Visibility="{Binding HasSource, Converter={StaticResource InverseBoolToVisibility}}"
+                       Text="找不到對應的 Google Form 原始回應，可能已被刪除或修改。後台資料會保留，請聯絡管理員處理。" />
+
+            <ItemsControl ItemsSource="{Binding RawGroups}" Focusable="False">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <StackPanel>
+                    <TextBlock Style="{StaticResource GroupTitle}" Text="{Binding Title}" />
+                    <ItemsControl ItemsSource="{Binding Fields}" Focusable="False">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="112" />
+                              <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding Label}" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="0,1,8,0" />
+                            <StackPanel Grid.Column="1">
+                              <TextBox Text="{Binding Value, Mode=OneWay}" AutomationProperties.Name="{Binding Label}">
+                                <TextBox.Style>
+                                  <Style TargetType="TextBox" BasedOn="{StaticResource ReadOnlyValue}">
+                                    <Style.Triggers>
+                                      <DataTrigger Binding="{Binding IsBlank}" Value="True">
+                                        <Setter Property="Foreground" Value="{StaticResource PlaceholderBrush}" />
+                                        <Setter Property="FontStyle" Value="Italic" />
+                                      </DataTrigger>
+                                    </Style.Triggers>
+                                  </Style>
+                                </TextBox.Style>
+                              </TextBox>
+                              <TextBlock Foreground="{StaticResource PrimaryTextBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,2,0,0"
+                                         Visibility="{Binding Corrected, Converter={StaticResource TextToVisibility}}">
+                                <Run Text="後台修正為：" /><Run Text="{Binding Corrected, Mode=OneWay}" FontWeight="SemiBold" />
+                              </TextBlock>
+                              <TextBlock Style="{StaticResource InlineWarning}" Visibility="{Binding Warning, Converter={StaticResource TextToVisibility}}">
+                                <Run Text="⚠ " /><Run Text="{Binding Warning, Mode=OneWay}" />
+                              </TextBlock>
+                            </StackPanel>
+                          </Grid>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <StackPanel Visibility="{Binding HasSource, Converter={StaticResource BoolToVisibility}}">
+              <TextBlock Style="{StaticResource GroupTitle}" Text="確認事項" />
+              <ItemsControl ItemsSource="{Binding Consents}" Focusable="False">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding Text}" Margin="0,0,0,6" TextWrapping="Wrap">
+                      <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                          <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding Checked}" Value="False">
+                              <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+                              <Setter Property="FontWeight" Value="SemiBold" />
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </TextBlock.Style>
+                    </TextBlock>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- 右：處理這筆報名（可編輯欄位集中在此） -->
+        <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource Card}" VerticalAlignment="Top">
+          <StackPanel>
+            <TextBlock Style="{StaticResource SectionTitle}" Text="處理這筆報名" />
+            <TextBlock Style="{StaticResource Hint}" Text="依序完成會員、資格與付款確認。按右上角「儲存變更」後才會寫入。" />
+
+            <!-- 驗證／儲存失敗 -->
+            <Border Background="{StaticResource ErrorBannerBrush}" BorderBrush="{StaticResource ErrorBannerBorderBrush}" BorderThickness="1"
+                    CornerRadius="10" Padding="14,10" Margin="0,14,0,0"
+                    Visibility="{Binding HasMessages, Converter={StaticResource BoolToVisibility}}"
+                    AutomationProperties.LiveSetting="Assertive">
+              <StackPanel>
+                <TextBlock Text="還不能完成，請先處理：" FontWeight="SemiBold" Foreground="{StaticResource ErrorBrush}" />
+                <ItemsControl ItemsSource="{Binding Messages}" Focusable="False" Margin="0,4,0,0">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <TextBlock Text="{Binding StringFormat=• {0}}" TextWrapping="Wrap" Foreground="{StaticResource TextBrush}" Margin="0,2,0,0" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+
+            <!-- 儲存前顯示將改變哪些狀態 -->
+            <Border Background="{StaticResource InfoBannerBrush}" BorderBrush="{StaticResource InfoBannerBorderBrush}" BorderThickness="1"
+                    CornerRadius="10" Padding="14,10" Margin="0,14,0,0"
+                    Visibility="{Binding PendingChanges.Count, Converter={StaticResource CountToVisibility}}">
+              <StackPanel>
+                <TextBlock Text="按「儲存變更」後會更新：" FontWeight="SemiBold" />
+                <ItemsControl ItemsSource="{Binding PendingChanges}" Focusable="False" Margin="0,4,0,0">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <TextBlock Text="{Binding StringFormat=• {0}}" TextWrapping="Wrap" Margin="0,2,0,0" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+
+            <!-- 1. 會員 -->
+            <StackPanel Style="{StaticResource SectionBlock}">
+              <TextBlock Style="{StaticResource GroupTitle}" Text="1　會員核對" Margin="0,0,0,8" />
+              <StackPanel Style="{StaticResource Field}">
+                <ComboBox ItemsSource="{Binding Options.MembershipStatuses}" DisplayMemberPath="Label" SelectedValuePath="Code"
+                          SelectedValue="{Binding Edit[membership_status]}" AutomationProperties.Name="會員核對" />
+                <TextBlock Style="{StaticResource InlineError}" Text="{Binding Errors[membership_status]}"
+                           Visibility="{Binding Errors[membership_status], Converter={StaticResource TextToVisibility}}" />
+              </StackPanel>
+              <Expander Style="{StaticResource SubExpander}" Header="會員編號與備註">
+                <StackPanel Margin="0,8,0,0">
+                  <TextBlock Style="{StaticResource FieldLabel}" Text="會員編號或名冊位置" />
+                  <TextBox Text="{Binding Edit[membership_reference], UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10"
+                           AutomationProperties.Name="會員編號或名冊位置" />
+                  <TextBlock Style="{StaticResource FieldLabel}" Text="核對備註" />
+                  <TextBox Style="{StaticResource MultiLine}" Text="{Binding Edit[membership_notes], UpdateSourceTrigger=PropertyChanged}"
+                           AutomationProperties.Name="會員核對備註" />
+                </StackPanel>
+              </Expander>
+            </StackPanel>
+
+            <!-- 2. 資格 -->
+            <StackPanel Style="{StaticResource SectionBlock}">
+              <TextBlock Style="{StaticResource GroupTitle}" Text="2　資格判定" Margin="0,0,0,8" />
+              <StackPanel Style="{StaticResource Field}">
+                <ComboBox ItemsSource="{Binding Options.EligibilityStatuses}" DisplayMemberPath="Label" SelectedValuePath="Code"
+                          SelectedValue="{Binding Edit[eligibility_status]}" AutomationProperties.Name="資格判定" />
+                <TextBlock Style="{StaticResource InlineError}" Text="{Binding Errors[eligibility_status]}"
+                           Visibility="{Binding Errors[eligibility_status], Converter={StaticResource TextToVisibility}}" />
+              </StackPanel>
+              <Expander Style="{StaticResource SubExpander}" Header="資格備註">
+                <TextBox Style="{StaticResource MultiLine}" Margin="0,8,0,0" Text="{Binding Edit[eligibility_notes], UpdateSourceTrigger=PropertyChanged}"
+                         AutomationProperties.Name="資格備註" />
+              </Expander>
+            </StackPanel>
+
+            <!-- 3. 報名狀態：只顯示目前合法的下一步 -->
+            <StackPanel Style="{StaticResource SectionBlock}">
+              <TextBlock Style="{StaticResource GroupTitle}" Text="3　報名狀態" Margin="0,0,0,8" />
+              <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                <TextBlock Text="目前：" Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" />
+                <Border Style="{StaticResource Chip}" Background="{Binding StatusTone, Converter={StaticResource ToneBackground}}">
+                  <TextBlock Style="{StaticResource ChipText}" Text="{Binding StatusLabel}" Foreground="{Binding StatusTone, Converter={StaticResource ToneForeground}}" />
+                </Border>
+              </StackPanel>
+
+              <StackPanel Visibility="{Binding HasPrimaryAction, Converter={StaticResource BoolToVisibility}}">
+                <Button Style="{StaticResource FlowButton}" Content="{Binding PrimaryAction.Label}" Command="{Binding RunPrimaryCommand}"
+                        AutomationProperties.HelpText="{Binding PrimaryAction.Description}" />
+                <TextBlock Style="{StaticResource Hint}" Text="{Binding PrimaryAction.Description}" Margin="2,6,0,0" />
+              </StackPanel>
+              <TextBlock Style="{StaticResource Hint}" Text="這個狀態沒有下一個步驟。需要變更時請使用「其他動作…」。"
+                         Visibility="{Binding HasPrimaryAction, Converter={StaticResource InverseBoolToVisibility}}" />
+
+              <TextBlock Text="{Binding ActionNote}" Foreground="{StaticResource PrimaryTextBrush}" TextWrapping="Wrap" Margin="2,8,0,0" FontWeight="SemiBold"
+                         Visibility="{Binding ActionNote, Converter={StaticResource TextToVisibility}}" AutomationProperties.LiveSetting="Polite" />
+
+              <Button Content="其他動作…" HorizontalAlignment="Left" Margin="0,12,0,0" Click="OnOtherActionsClick"
+                      ToolTip="不通過、候補、取消、付款逾期、退款、封存" AutomationProperties.Name="其他動作">
+                <Button.ContextMenu>
+                  <ContextMenu ItemsSource="{Binding OtherActions}" Placement="Bottom">
+                    <ContextMenu.ItemContainerStyle>
+                      <Style TargetType="MenuItem">
+                        <Setter Property="Header" Value="{Binding Label}" />
+                        <Setter Property="ToolTip" Value="{Binding Description}" />
+                        <Setter Property="FontSize" Value="14" />
+                        <Setter Property="Padding" Value="8,8" />
+                        <Setter Property="Command" Value="{Binding DataContext.RunOtherCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                        <Setter Property="CommandParameter" Value="{Binding}" />
+                      </Style>
+                    </ContextMenu.ItemContainerStyle>
+                  </ContextMenu>
+                </Button.ContextMenu>
+              </Button>
+
+              <StackPanel Style="{StaticResource Field}" Margin="0,14,0,0">
+                <TextBlock Style="{StaticResource FieldLabel}" Text="審核備註" />
+                <TextBox Style="{StaticResource MultiLine}" MinHeight="56" Text="{Binding Edit[review_notes], UpdateSourceTrigger=PropertyChanged}"
+                         AutomationProperties.Name="審核備註" />
+                <TextBlock Style="{StaticResource InlineError}" Text="{Binding Errors[review_notes]}"
+                           Visibility="{Binding Errors[review_notes], Converter={StaticResource TextToVisibility}}" />
+              </StackPanel>
+              <StackPanel Style="{StaticResource Field}"
+                          Visibility="{Binding Edit[cancellation_reason], Converter={StaticResource TextToVisibility}}">
+                <TextBlock Style="{StaticResource FieldLabel}" Text="取消原因" />
+                <TextBox Style="{StaticResource MultiLine}" MinHeight="56" Text="{Binding Edit[cancellation_reason], UpdateSourceTrigger=PropertyChanged}"
+                         AutomationProperties.Name="取消原因" />
+              </StackPanel>
+              <TextBlock Style="{StaticResource InlineError}" Text="{Binding Errors[cancellation_reason]}"
+                         Visibility="{Binding Errors[cancellation_reason], Converter={StaticResource TextToVisibility}}" />
+            </StackPanel>
+
+            <!-- 4. 付款 -->
+            <StackPanel Style="{StaticResource SectionBlock}" Visibility="{Binding ShowPaymentSection, Converter={StaticResource BoolToVisibility}}">
+              <TextBlock Style="{StaticResource GroupTitle}" Text="4　付款" Margin="0,0,0,8" />
+              <StackPanel Style="{StaticResource Field}">
+                <TextBlock Style="{StaticResource FieldLabel}" Text="付款狀態" />
+                <ComboBox ItemsSource="{Binding Options.PaymentStatuses}" DisplayMemberPath="Label" SelectedValuePath="Code"
+                          SelectedValue="{Binding Edit[payment_status]}" AutomationProperties.Name="付款狀態" />
+                <TextBlock Style="{StaticResource InlineError}" Text="{Binding Errors[payment_status]}"
+                           Visibility="{Binding Errors[payment_status], Converter={StaticResource TextToVisibility}}" />
+              </StackPanel>
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="12" />
+                  <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Style="{StaticResource Field}">
+                  <TextBlock Style="{StaticResource FieldLabel}" Text="付款日期" />
+                  <DockPanel>
+                    <Button DockPanel.Dock="Right" Content="今天" Padding="10,0" Margin="6,0,0,0" Command="{Binding SetTodayCommand}" CommandParameter="paid_at"
+                            AutomationProperties.Name="付款日期填入今天" />
+                    <TextBox Text="{Binding Edit[paid_at], UpdateSourceTrigger=PropertyChanged}" ToolTip="例如 2026-10-15" AutomationProperties.Name="付款日期" />
+                  </DockPanel>
+                  <TextBlock Style="{StaticResource InlineError}" Text="{Binding Errors[paid_at]}"
+                             Visibility="{Binding Errors[paid_at], Converter={StaticResource TextToVisibility}}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" Style="{StaticResource Field}">
+                  <TextBlock Style="{StaticResource FieldLabel}" Text="核帳日期" />
+                  <DockPanel>
+                    <Button DockPanel.Dock="Right" Content="今天" Padding="10,0" Margin="6,0,0,0" Command="{Binding SetTodayCommand}" CommandParameter="verified_at"
+                            AutomationProperties.Name="核帳日期填入今天" />
+                    <TextBox Text="{Binding Edit[verified_at], UpdateSourceTrigger=PropertyChanged}" ToolTip="例如 2026-10-15" AutomationProperties.Name="核帳日期" />
+                  </DockPanel>
+                  <TextBlock Style="{StaticResource InlineError}" Text="{Binding Errors[verified_at]}"
+                             Visibility="{Binding Errors[verified_at], Converter={StaticResource TextToVisibility}}" />
+                </StackPanel>
+              </Grid>
+              <StackPanel Style="{StaticResource Field}">
+                <TextBlock Style="{StaticResource FieldLabel}" Text="匯款帳號末五碼（不要輸入完整帳號）" />
+                <TextBox Text="{Binding Edit[account_last5], UpdateSourceTrigger=PropertyChanged}" MaxLength="5" Width="140" HorizontalAlignment="Left"
+                         AutomationProperties.Name="匯款帳號末五碼" />
+                <TextBlock Style="{StaticResource InlineError}" Text="{Binding Errors[account_last5]}"
+                           Visibility="{Binding Errors[account_last5], Converter={StaticResource TextToVisibility}}" />
+              </StackPanel>
+              <Expander Style="{StaticResource SubExpander}" Header="更多付款資訊">
+                <StackPanel Margin="0,8,0,0">
+                  <TextBlock Style="{StaticResource FieldLabel}" Text="應付金額" />
+                  <TextBox Text="{Binding Edit[expected_amount], UpdateSourceTrigger=PropertyChanged}" Width="160" HorizontalAlignment="Left" Margin="0,0,0,4"
+                           AutomationProperties.Name="應付金額" />
+                  <TextBlock Style="{StaticResource InlineError}" Text="{Binding Errors[expected_amount]}"
+                             Visibility="{Binding Errors[expected_amount], Converter={StaticResource TextToVisibility}}" />
+                  <TextBlock Style="{StaticResource FieldLabel}" Text="付款期限" Margin="0,8,0,4" />
+                  <DockPanel Margin="0,0,0,4">
+                    <Button DockPanel.Dock="Right" Content="今天" Padding="10,0" Margin="6,0,0,0" Command="{Binding SetTodayCommand}" CommandParameter="payment_deadline_at" />
+                    <TextBox Text="{Binding Edit[payment_deadline_at], UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="付款期限" />
+                  </DockPanel>
+                  <TextBlock Style="{StaticResource InlineError}" Text="{Binding Errors[payment_deadline_at]}"
+                             Visibility="{Binding Errors[payment_deadline_at], Converter={StaticResource TextToVisibility}}" />
+                  <TextBlock Style="{StaticResource FieldLabel}" Text="匯款人" Margin="0,8,0,4" />
+                  <TextBox Text="{Binding Edit[payer_name], UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="匯款人" />
+                  <TextBlock Style="{StaticResource FieldLabel}" Text="銀行" Margin="0,8,0,4" />
+                  <TextBox Text="{Binding Edit[bank_name], UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="銀行" />
+                  <TextBlock Style="{StaticResource FieldLabel}" Text="付款參考（例如交易序號）" Margin="0,8,0,4" />
+                  <TextBox Text="{Binding Edit[payment_reference], UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="付款參考" />
+                  <TextBlock Style="{StaticResource FieldLabel}" Text="報名者回報匯款的日期" Margin="0,8,0,4" />
+                  <DockPanel Margin="0,0,0,4">
+                    <Button DockPanel.Dock="Right" Content="今天" Padding="10,0" Margin="6,0,0,0" Command="{Binding SetTodayCommand}" CommandParameter="payment_reported_at" />
+                    <TextBox Text="{Binding Edit[payment_reported_at], UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="回報匯款日期" />
+                  </DockPanel>
+                  <TextBlock Style="{StaticResource InlineError}" Text="{Binding Errors[payment_reported_at]}"
+                             Visibility="{Binding Errors[payment_reported_at], Converter={StaticResource TextToVisibility}}" />
+                  <TextBlock Style="{StaticResource FieldLabel}" Text="財務備註" Margin="0,8,0,4" />
+                  <TextBox Style="{StaticResource MultiLine}" Text="{Binding Edit[finance_notes], UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="財務備註" />
+                </StackPanel>
+              </Expander>
+            </StackPanel>
+
+            <!-- 需要確認的問題 -->
+            <StackPanel Style="{StaticResource SectionBlock}" Visibility="{Binding HasIssues, Converter={StaticResource BoolToVisibility}}">
+              <TextBlock Style="{StaticResource GroupTitle}" Text="需要確認的問題" Margin="0,0,0,8" />
+              <ItemsControl ItemsSource="{Binding OpenIssues}" Focusable="False">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Border BorderBrush="{StaticResource DividerBrush}" BorderThickness="1" CornerRadius="10" Padding="14,10" Margin="0,0,0,8">
+                      <StackPanel>
+                        <WrapPanel>
+                          <Border Style="{StaticResource Chip}" Background="{Binding Tone, Converter={StaticResource ToneBackground}}" Margin="0,0,8,0">
+                            <TextBlock Style="{StaticResource ChipText}" Text="{Binding SeverityLabel}" Foreground="{Binding Tone, Converter={StaticResource ToneForeground}}" />
+                          </Border>
+                          <TextBlock Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </WrapPanel>
+                        <TextBlock Text="{Binding Detail}" Style="{StaticResource Muted}" Margin="0,6,0,0" />
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                          <Button Content="確認沒問題…" MinHeight="34"
+                                  Visibility="{Binding CanAccept, Converter={StaticResource BoolToVisibility}}"
+                                  Command="{Binding DataContext.AcceptIssueCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                  CommandParameter="{Binding}" ToolTip="記錄原因後，這個問題不再列為待處理" />
+                          <Button Content="我已確認最新內容" MinHeight="34"
+                                  Visibility="{Binding IsSourceChange, Converter={StaticResource BoolToVisibility}}"
+                                  Command="{Binding DataContext.AcceptSourceChangeCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                        </StackPanel>
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+
+            <!-- 疑似重複 -->
+            <StackPanel Style="{StaticResource SectionBlock}" Visibility="{Binding ShowDuplicateSection, Converter={StaticResource BoolToVisibility}}">
+              <TextBlock Style="{StaticResource GroupTitle}" Text="疑似重複的判斷" Margin="0,0,0,8" />
+              <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,8" Text="系統不會自動合併。確定是重複時，選擇要保留的另一筆。" />
+              <StackPanel Style="{StaticResource Field}">
+                <ComboBox ItemsSource="{Binding Options.DuplicateStatuses}" DisplayMemberPath="Label" SelectedValuePath="Code"
+                          SelectedValue="{Binding Edit[duplicate_status]}" AutomationProperties.Name="重複判定" />
+              </StackPanel>
+              <StackPanel Style="{StaticResource Field}">
+                <TextBlock Style="{StaticResource FieldLabel}" Text="保留的另一筆報名" />
+                <ComboBox ItemsSource="{Binding DuplicateCandidates}" DisplayMemberPath="Label" SelectedValuePath="Code"
+                          SelectedValue="{Binding Edit[duplicate_of_record_id]}" AutomationProperties.Name="保留的另一筆報名" />
+                <TextBlock Style="{StaticResource InlineError}" Text="{Binding Errors[duplicate_of_record_id]}"
+                           Visibility="{Binding Errors[duplicate_of_record_id], Converter={StaticResource TextToVisibility}}" />
+              </StackPanel>
+            </StackPanel>
+
+            <!-- 後台備註 -->
+            <StackPanel Style="{StaticResource SectionBlock}">
+              <TextBlock Style="{StaticResource GroupTitle}" Text="後台備註" Margin="0,0,0,8" />
+              <TextBox Style="{StaticResource MultiLine}" Text="{Binding Edit[admin_notes], UpdateSourceTrigger=PropertyChanged}"
+                       AutomationProperties.Name="後台備註" ToolTip="只給內部人員看的備註" />
+            </StackPanel>
+
+            <Border Style="{StaticResource Divider}" />
+
+            <!-- 低頻欄位：收合 -->
+            <Expander Header="發票" Margin="0,14,0,0">
+              <StackPanel Margin="0,10,0,0">
+                <TextBlock Style="{StaticResource FieldLabel}" Text="發票狀態" />
+                <ComboBox ItemsSource="{Binding Options.InvoiceStatuses}" DisplayMemberPath="Label" SelectedValuePath="Code"
+                          SelectedValue="{Binding Edit[invoice_status]}" AutomationProperties.Name="發票狀態" />
+                <TextBlock Style="{StaticResource FieldLabel}" Text="發票號碼" Margin="0,10,0,4" />
+                <TextBox Text="{Binding Edit[invoice_number], UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="發票號碼" />
+                <TextBlock Style="{StaticResource InlineError}" Text="{Binding Errors[invoice_number]}"
+                           Visibility="{Binding Errors[invoice_number], Converter={StaticResource TextToVisibility}}" />
+                <TextBlock Style="{StaticResource FieldLabel}" Text="開立日期" Margin="0,10,0,4" />
+                <DockPanel>
+                  <Button DockPanel.Dock="Right" Content="今天" Padding="10,0" Margin="6,0,0,0" Command="{Binding SetTodayCommand}" CommandParameter="invoice_issued_at" />
+                  <TextBox Text="{Binding Edit[invoice_issued_at], UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="發票開立日期" />
+                </DockPanel>
+                <TextBlock Style="{StaticResource InlineError}" Text="{Binding Errors[invoice_issued_at]}"
+                           Visibility="{Binding Errors[invoice_issued_at], Converter={StaticResource TextToVisibility}}" />
+                <TextBlock Style="{StaticResource FieldLabel}" Text="發票備註" Margin="0,10,0,4" />
+                <TextBox Style="{StaticResource MultiLine}" Text="{Binding Edit[invoice_notes], UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="發票備註" />
+              </StackPanel>
+            </Expander>
+
+            <Expander Header="修正報名者資料" Margin="0,10,0,0">
+              <StackPanel Margin="0,10,0,0">
+                <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,10"
+                           Text="報名者填錯時在這裡填寫正確值；左側原始答案不會被改變。清空即恢復使用原始答案。" />
+                <ItemsControl ItemsSource="{Binding OverrideFields}" Focusable="False">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <StackPanel Margin="0,0,0,12">
+                        <TextBlock Style="{StaticResource FieldLabel}">
+                          <Run Text="{Binding Label, Mode=OneWay}" FontWeight="SemiBold" /><Run Text="　原始：" /><Run Text="{Binding RawValue, Mode=OneWay}" />
+                        </TextBlock>
+                        <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{Binding Label}" />
+                      </StackPanel>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Style="{StaticResource FieldLabel}">
+                  <Run Text="午餐" FontWeight="SemiBold" /><Run Text="　目前採用：" /><Run Text="{Binding EffectiveMealText, Mode=OneWay}" />
+                </TextBlock>
+                <ComboBox ItemsSource="{Binding Options.MealOverrideCodes}" DisplayMemberPath="Label" SelectedValuePath="Code"
+                          SelectedValue="{Binding Edit[override_meal_code]}" AutomationProperties.Name="午餐修正" />
+                <TextBlock Style="{StaticResource FieldLabel}" Text="午餐其他說明" Margin="0,10,0,4" />
+                <TextBox Text="{Binding Edit[meal_other_text], UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="午餐其他說明" />
+                <TextBlock Style="{StaticResource InlineError}" Text="{Binding Errors[meal_other_text]}"
+                           Visibility="{Binding Errors[meal_other_text], Converter={StaticResource TextToVisibility}}" />
+                <TextBlock Style="{StaticResource FieldLabel}" Text="飲食備註" Margin="0,10,0,4" />
+                <TextBox Style="{StaticResource MultiLine}" Text="{Binding Edit[dietary_notes], UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="飲食備註" />
+              </StackPanel>
+            </Expander>
+
+            <Expander Header="修改紀錄" Margin="0,10,0,0">
+              <StackPanel Margin="0,10,0,0">
+                <TextBlock Style="{StaticResource Muted}" Text="{Binding HistoryStatus}" Visibility="{Binding HistoryStatus, Converter={StaticResource TextToVisibility}}" />
+                <ItemsControl ItemsSource="{Binding History}" Focusable="False">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="150" />
+                          <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding When}" Foreground="{StaticResource MutedBrush}" FontSize="13" />
+                        <TextBlock Grid.Column="1" Text="{Binding What}" TextWrapping="Wrap" FontSize="13" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Expander>
+          </StackPanel>
+        </Border>
+      </Grid>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

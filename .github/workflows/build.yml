@@ -1,0 +1,20 @@
+name: build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Restore
+        run: dotnet restore RegistrationAdmin.slnx
+      - name: Build
+        run: dotnet build RegistrationAdmin.slnx -c Release --no-restore
+      - name: Unit tests
+        run: dotnet test tests/RegistrationAdmin.Tests -c Release --no-build

@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 畫面狀態與文案測試（ViewModel／Presentation），不開啟視窗。 -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\RegistrationAdmin.App\RegistrationAdmin.App.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- 共用核心測試的虛構資料與記憶體 store -->
+    <Compile Include="..\RegistrationAdmin.Tests\TestData\Fixtures.cs" Link="TestData\Fixtures.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <Using Include="System.Net.Http" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/RegistrationAdmin.Core/RegistrationAdmin.Core.csproj" />
+    <Project Path="src/RegistrationAdmin.GoogleSheets/RegistrationAdmin.GoogleSheets.csproj" />
+    <Project Path="src/RegistrationAdmin.Export/RegistrationAdmin.Export.csproj" />
+    <Project Path="src/RegistrationAdmin.App/RegistrationAdmin.App.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/RegistrationAdmin.Tests/RegistrationAdmin.Tests.csproj" />
+    <Project Path="tests/RegistrationAdmin.App.Tests/RegistrationAdmin.App.Tests.csproj" />
+    <Project Path="tests/RegistrationAdmin.IntegrationTests/RegistrationAdmin.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

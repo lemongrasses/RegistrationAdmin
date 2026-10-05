@@ -1,0 +1,87 @@
+<UserControl x:Class="RegistrationAdmin.App.Views.ExportView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+    <StackPanel Margin="24,20,24,96" MaxWidth="960" HorizontalAlignment="Left">
+      <TextBlock Style="{StaticResource PageTitle}" Text="匯出資料" />
+      <TextBlock Style="{StaticResource Muted}" Text="選擇用途，匯出成 Excel 檔。匯出檔包含個人資料，請妥善保存。" Margin="0,4,0,16" />
+
+      <Border Style="{StaticResource Card}">
+        <StackPanel>
+          <TextBlock Style="{StaticResource GroupTitle}" Text="1　選擇用途" Margin="0,0,0,10" />
+          <ListBox ItemsSource="{Binding ExportTemplateOptions}" SelectedItem="{Binding SelectedExportTemplate}" BorderThickness="0"
+                   Background="Transparent" AutomationProperties.Name="匯出範本"
+                   ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListBox.ItemsPanel>
+              <ItemsPanelTemplate>
+                <UniformGrid Columns="2" />
+              </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemContainerStyle>
+              <Style TargetType="ListBoxItem">
+                <Setter Property="Margin" Value="0,0,10,10" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}" />
+                <Setter Property="AutomationProperties.Name" Value="{Binding Name}" />
+                <Setter Property="Template">
+                  <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                      <Border x:Name="Bd" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="14,10"
+                              Background="{StaticResource SurfaceBrush}">
+                        <DockPanel>
+                          <Border x:Name="Dot" DockPanel.Dock="Left" Width="18" Height="18" CornerRadius="9" BorderThickness="2"
+                                  BorderBrush="{StaticResource BorderBrush}" VerticalAlignment="Top" Margin="0,2,12,0">
+                            <Ellipse x:Name="Inner" Width="8" Height="8" Fill="{StaticResource PrimaryBrush}" Visibility="Collapsed" />
+                          </Border>
+                          <StackPanel>
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding Description}" Style="{StaticResource Muted}" FontSize="13" Margin="0,2,0,0" />
+                          </StackPanel>
+                        </DockPanel>
+                      </Border>
+                      <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                          <Setter TargetName="Bd" Property="Background" Value="{StaticResource SubtleBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                          <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
+                          <Setter TargetName="Bd" Property="Background" Value="{StaticResource SelectedRowBrush}" />
+                          <Setter TargetName="Dot" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
+                          <Setter TargetName="Inner" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                      </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                  </Setter.Value>
+                </Setter>
+              </Style>
+            </ListBox.ItemContainerStyle>
+          </ListBox>
+
+          <TextBlock Style="{StaticResource GroupTitle}" Text="2　範圍" Margin="0,10,0,6" />
+          <RadioButton GroupName="ExportScope" Content="全部報名（不含封存）" IsChecked="{Binding ExportCurrentFilter, Converter={StaticResource InverseBool}}" />
+          <RadioButton GroupName="ExportScope" Content="{Binding CurrentFilterCountText}" IsChecked="{Binding ExportCurrentFilter}" />
+
+          <TextBlock Style="{StaticResource GroupTitle}" Text="3　檔案格式" Margin="0,16,0,6" />
+          <RadioButton GroupName="ExportFormat" Content="Excel 活頁簿（.xlsx，建議）" IsChecked="{Binding ExportAsCsv, Converter={StaticResource InverseBool}}" />
+          <RadioButton GroupName="ExportFormat" Content="CSV（給其他系統匯入用）" IsChecked="{Binding ExportAsCsv}" />
+
+          <Expander Header="進階選項" Margin="0,16,0,0">
+            <StackPanel Margin="0,8,0,0">
+              <CheckBox Content="包含聯絡方式、統編與付款欄位" IsChecked="{Binding ExportIncludeSensitive}" />
+              <CheckBox Content="包含報名者備註與得知管道" IsChecked="{Binding ExportIncludeApplicantNotes}" />
+              <CheckBox Content="使用原始答案（不套用後台修正）" IsChecked="{Binding ExportRawValues}" />
+            </StackPanel>
+          </Expander>
+
+          <Border Height="1" Background="{StaticResource DividerBrush}" Margin="0,20,0,16" />
+          <DockPanel>
+            <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Content="匯出…" MinWidth="120" Command="{Binding ExportCommand}" />
+            <Button DockPanel.Dock="Right" Style="{StaticResource TextButton}" Content="開啟檔案位置" Margin="0,0,12,0" Command="{Binding OpenExportFolderCommand}"
+                    Visibility="{Binding HasLastExport, Converter={StaticResource BoolToVisibility}}" />
+            <TextBlock Text="{Binding ExportCountText}" VerticalAlignment="Center" FontWeight="SemiBold" TextWrapping="Wrap" />
+          </DockPanel>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

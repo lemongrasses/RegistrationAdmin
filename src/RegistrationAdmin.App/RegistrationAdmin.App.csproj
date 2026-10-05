@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>RegistrationAdmin.App</RootNamespace>
+    <AssemblyName>RegistrationAdmin</AssemblyName>
+    <AssemblyTitle>活動報名後台</AssemblyTitle>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <SatelliteResourceLanguages>zh-Hant;zh-TW</SatelliteResourceLanguages>
+    <!-- 自訂 Main：讓 Velopack 先處理安裝／更新事件（見 Program.cs） -->
+    <StartupObject>RegistrationAdmin.App.Program</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.Extensions.Hosting" />
+    <PackageReference Include="Serilog.Sinks.File" />
+    <PackageReference Include="Velopack" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- 隨程式發佈的 OAuth 用戶端（Desktop app 類型）。檔案不進版控，見 .gitignore。 -->
+    <None Include="..\..\config\google-oauth-client.json" Link="google-oauth-client.json"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest"
+          Condition="Exists('..\..\config\google-oauth-client.json')" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RegistrationAdmin.Core\RegistrationAdmin.Core.csproj" />
+    <ProjectReference Include="..\RegistrationAdmin.GoogleSheets\RegistrationAdmin.GoogleSheets.csproj" />
+    <ProjectReference Include="..\RegistrationAdmin.Export\RegistrationAdmin.Export.csproj" />
+  </ItemGroup>
+</Project>
