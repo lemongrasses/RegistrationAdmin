@@ -4,9 +4,9 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <Deterministic>true</Deterministic>
-    <Version>0.2.0</Version>
+    <Version>0.2.3</Version>
     <Product>RegistrationAdmin</Product>
-    <Company>lemongrasses</Company>
+    <Company>高精地圖研究發展中心</Company>
     <Copyright>2026</Copyright>
     <NeutralLanguage>zh-TW</NeutralLanguage>
     <!-- 第一次 restore 後會產生 packages.lock.json，請一併提交以鎖定實際版本 -->

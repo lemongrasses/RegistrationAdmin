@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+  <defs><style>.ui{font-family:"Segoe UI","Microsoft JhengHei UI",sans-serif;fill:#172033}.muted{fill:#667085}.h1{font-size:26px;font-weight:700}.h2{font-size:18px;font-weight:650}.body{font-size:14px}.small{font-size:12px}.label{font-size:12px;fill:#667085}.value{font-size:15px}.line{stroke:#E4E7EC;stroke-width:1}.chip{font-size:12px;font-weight:650}</style><filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="5" flood-color="#101828" flood-opacity="0.08"/></filter></defs>
+  <rect width="1440" height="900" fill="#F6F8FB"/>
+  <rect x="0" y="0" width="1440" height="82" fill="#fff"/><line x1="0" y1="82" x2="1440" y2="82" class="line"/>
+  <text x="36" y="48" class="ui body" fill="#175CD3">← 回到待處理名單</text>
+  <text x="242" y="39" class="ui h1">王小明</text><text x="242" y="63" class="ui body muted">RD26-0018 · 今天 09:42 送出</text>
+  <rect x="1224" y="22" width="180" height="40" rx="8" fill="#2563EB"/><text x="1265" y="48" font-family="Segoe UI,Microsoft JhengHei UI" font-size="15" font-weight="650" fill="#fff">儲存變更</text>
+
+  <rect x="36" y="106" width="1368" height="56" rx="10" fill="#FFF8EB" stroke="#FEDF89"/>
+  <circle cx="66" cy="134" r="12" fill="#F79009"/><text x="62" y="139" font-family="Segoe UI" font-size="15" font-weight="700" fill="#fff">!</text>
+  <text x="90" y="130" class="ui body" font-weight="650">這筆報名有 2 項需要處理</text><text x="90" y="150" class="ui small muted">會員資格尚未核對；聯絡電話格式需要確認。</text>
+
+  <rect x="36" y="186" width="862" height="666" rx="12" fill="#fff" filter="url(#s)"/>
+  <text x="64" y="224" class="ui h2">原始報名資料</text><rect x="214" y="204" width="78" height="26" rx="13" fill="#F2F4F7"/><text x="232" y="222" class="ui chip muted">唯讀</text>
+  <text x="64" y="258" class="ui small muted">內容來自 Google Form；後台不會修改原始回應。</text>
+  <line x1="64" y1="280" x2="870" y2="280" class="line"/>
+  <text x="64" y="316" class="ui h2">基本資料</text>
+  <text x="64" y="350" class="ui label">姓名</text><text x="64" y="374" class="ui value">王小明</text>
+  <text x="348" y="350" class="ui label">服務單位</text><text x="348" y="374" class="ui value">國立成功大學</text>
+  <text x="650" y="350" class="ui label">職稱</text><text x="650" y="374" class="ui value">研究助理</text>
+  <line x1="64" y1="402" x2="870" y2="402" class="line"/>
+  <text x="64" y="438" class="ui h2">聯絡方式</text>
+  <text x="64" y="472" class="ui label">Email</text><text x="64" y="496" class="ui value">sample@example.com</text>
+  <text x="462" y="472" class="ui label">聯絡電話</text><text x="462" y="496" class="ui value">0912 345 67</text><text x="462" y="520" class="ui small" fill="#B42318">電話位數可能不完整，請確認。</text>
+  <line x1="64" y1="548" x2="870" y2="548" class="line"/>
+  <text x="64" y="584" class="ui h2">報名資訊</text>
+  <text x="64" y="618" class="ui label">午餐</text><text x="64" y="642" class="ui value">葷食</text>
+  <text x="260" y="618" class="ui label">發票抬頭</text><text x="260" y="642" class="ui value">國立成功大學</text>
+  <text x="580" y="618" class="ui label">統一編號</text><text x="580" y="642" class="ui value">69115908</text>
+  <text x="64" y="690" class="ui label">備註</text><text x="64" y="714" class="ui value">無</text>
+  <rect x="64" y="758" width="806" height="58" rx="8" fill="#F9FAFB"/><text x="84" y="784" class="ui body">✓ 已同意資料使用　　✓ 已確認三日全程參與</text><text x="84" y="804" class="ui body">✓ 已了解報名費　　　✓ 已確認資料正確</text>
+
+  <rect x="922" y="186" width="482" height="666" rx="12" fill="#fff" filter="url(#s)"/>
+  <text x="950" y="224" class="ui h2">處理這筆報名</text><text x="950" y="250" class="ui body muted">依序完成會員、資格與付款確認。</text>
+  <text x="950" y="292" class="ui label">會員核對</text><rect x="950" y="306" width="426" height="44" rx="8" fill="#fff" stroke="#D0D5DD"/><text x="968" y="333" class="ui body">未核對</text><text x="1348" y="333" class="ui body muted">▾</text>
+  <text x="950" y="382" class="ui label">資格判定</text><rect x="950" y="396" width="426" height="44" rx="8" fill="#fff" stroke="#D0D5DD"/><text x="968" y="423" class="ui body">未判定</text><text x="1348" y="423" class="ui body muted">▾</text>
+  <text x="950" y="472" class="ui label">報名狀態</text><rect x="950" y="486" width="426" height="44" rx="8" fill="#fff" stroke="#D0D5DD"/><text x="968" y="513" class="ui body">新報名</text><text x="1348" y="513" class="ui body muted">▾</text>
+  <text x="950" y="562" class="ui label">付款狀態</text><rect x="950" y="576" width="426" height="44" rx="8" fill="#F9FAFB" stroke="#E4E7EC"/><text x="968" y="603" class="ui body muted">未通知付款</text>
+  <text x="950" y="652" class="ui label">後台備註</text><rect x="950" y="666" width="426" height="82" rx="8" fill="#fff" stroke="#D0D5DD"/><text x="968" y="692" class="ui body muted">輸入只給內部人員看的備註…</text>
+  <rect x="950" y="770" width="252" height="44" rx="8" fill="#2563EB"/><text x="985" y="797" font-family="Segoe UI,Microsoft JhengHei UI" font-size="14" font-weight="650" fill="#fff">確認會員並開始審核</text>
+  <rect x="1214" y="770" width="162" height="44" rx="8" fill="#fff" stroke="#D0D5DD"/><text x="1248" y="797" class="ui body muted">其他動作…</text>
+</svg>

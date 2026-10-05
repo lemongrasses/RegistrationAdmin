@@ -85,6 +85,22 @@ public sealed partial class MainViewModel : ObservableObject
         _logger = logger;
         _now = now ?? (() => DateTime.Now);
         Settings = settings;
+        Settings.CanEndSession = () => !IsBusy && ConfirmLeave();
+        Settings.SpreadsheetChanged += (_, _) => ClearWorkspace();
+        Settings.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName is not (nameof(SettingsViewModel.IsSignedIn) or nameof(SettingsViewModel.IsBusy))) return;
+            if (e.PropertyName == nameof(SettingsViewModel.IsSignedIn) && !Settings.IsSignedIn)
+            {
+                ClearWorkspace();
+            }
+            RefreshCommand.NotifyCanExecuteChanged();
+            SaveCommand.NotifyCanExecuteChanged();
+            ExportCommand.NotifyCanExecuteChanged();
+            RelinkCommand.NotifyCanExecuteChanged();
+            AcceptIssueCommand.NotifyCanExecuteChanged();
+            AcceptSourceChangeCommand.NotifyCanExecuteChanged();
+        };
         Settings.ConnectionReady += async (_, _) => await OnConnectionReadyAsync();
         _options = LookupOptions.From(LookupCatalog.Default);
         ExportTemplateOptions = ExportTemplates.All
@@ -94,6 +110,25 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     public SettingsViewModel Settings { get; }
+
+    private void ClearWorkspace()
+    {
+        _workspace.ClearSession();
+        Rows.Clear();
+        Cards.Clear();
+        SourceProblems.Clear();
+        PendingRelinks.Clear();
+        SelectedRow = null;
+        SelectedPendingRelink = null;
+        _filtered = Array.Empty<Registration>();
+        SetNav(NavSection.Settings);
+        LastUpdatedText = "尚未更新名單";
+        Notice = "";
+        EventTitle = EventConfig.Default.EventName;
+        EventSubtitle = "原始表單資料唯讀";
+        PendingBadge = "";
+        OnPropertyChanged(nameof(IsLoaded));
+    }
 
     public ObservableCollection<RegistrationRowViewModel> Rows { get; } = new();
 
@@ -275,6 +310,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     public async Task InitializeAsync()
     {
+        if (!Settings.IsSignedIn) return;
         if (Settings.CanAutoConnect)
         {
             await RefreshCommand.ExecuteAsync(null);
@@ -323,6 +359,7 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>切換左側入口；有未儲存的修改時先確認。</summary>
     public bool Navigate(NavSection target)
     {
+        if (!Settings.IsSignedIn) return false;
         if (target == _nav && CurrentPage != AppPage.Detail)
         {
             return true;
@@ -417,11 +454,12 @@ public sealed partial class MainViewModel : ObservableObject
 
     // ── 名單 ──
 
-    private bool CanRun() => !IsBusy;
+    private bool CanRun() => Settings.IsSignedIn && !Settings.IsBusy && !IsBusy;
 
     [RelayCommand(CanExecute = nameof(CanRun))]
     private async Task RefreshAsync()
     {
+        if (!CanRun()) return;
         if (CurrentPage == AppPage.Detail && HasUnsavedChanges
             && !_dialogs.Confirm("這筆報名有尚未儲存的變更。更新名單會捨棄這些變更。", "要更新名單嗎？", "捨棄變更並更新", danger: true))
         {
@@ -485,11 +523,12 @@ public sealed partial class MainViewModel : ObservableObject
 
     // ── 單筆 ──
 
-    private bool CanSave() => !IsBusy && Editor is not null;
+    private bool CanSave() => CanRun() && Editor is not null;
 
     [RelayCommand(CanExecute = nameof(CanSave))]
     private async Task SaveAsync()
     {
+        if (!CanSave()) return;
         var editor = Editor;
         if (editor is null)
         {
@@ -543,7 +582,7 @@ public sealed partial class MainViewModel : ObservableObject
         ShowNotice("已取消尚未儲存的變更。", NoticeKind.Info);
     }
 
-    private bool CanAcceptIssue(RecordIssueViewModel? issue) => !IsBusy && issue?.CanAccept == true;
+    private bool CanAcceptIssue(RecordIssueViewModel? issue) => CanRun() && issue?.CanAccept == true;
 
     /// <summary>確認問題沒關係（接受例外）：立即寫入，需要填寫原因。</summary>
     [RelayCommand(CanExecute = nameof(CanAcceptIssue))]
@@ -576,7 +615,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
-    private bool CanAcceptSourceChange() => !IsBusy && Editor?.Registration.SourceChanged == true;
+    private bool CanAcceptSourceChange() => CanRun() && Editor?.Registration.SourceChanged == true;
 
     [RelayCommand(CanExecute = nameof(CanAcceptSourceChange))]
     private async Task AcceptSourceChangeAsync()
@@ -612,6 +651,7 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanRun))]
     private void Export()
     {
+        if (!CanRun()) return;
         if (!_workspace.IsLoaded)
         {
             ShowNotice("請先更新名單，再匯出。", NoticeKind.Warning);
@@ -674,7 +714,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     // ── 進階：來源連結 ──
 
-    private bool CanRelink() => !IsBusy && SelectedPendingRelink is not null && SelectedRelinkCandidate is not null;
+    private bool CanRelink() => CanRun() && SelectedPendingRelink is not null && SelectedRelinkCandidate is not null;
 
     [RelayCommand(CanExecute = nameof(CanRelink))]
     private async Task RelinkAsync()
@@ -742,7 +782,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     private async Task<bool> RunBusyAsync(string message, Func<CancellationToken, Task> action, Action<string>? onError = null)
     {
-        if (IsBusy)
+        if (!CanRun())
         {
             return false;
         }

@@ -13,5 +13,6 @@
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="RegistrationAdmin.IntegrationTests" />
+    <InternalsVisibleTo Include="RegistrationAdmin.App.Tests" />
   </ItemGroup>
 </Project>

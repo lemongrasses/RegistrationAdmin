@@ -9,4 +9,4 @@ dotnet build RegistrationAdmin.slnx -c Release --no-restore
 dotnet test tests/RegistrationAdmin.Tests/RegistrationAdmin.Tests.csproj -c Release --no-build --logger "console;verbosity=normal"
 
 Write-Host ''
-Write-Host '建置與單元測試完成。Google 整合測試請用 scripts/integration-test.ps1。' -ForegroundColor Green
+Write-Host '建置與單元測試完成。Google 整合測試請見 docs/開發者說明.md。' -ForegroundColor Green

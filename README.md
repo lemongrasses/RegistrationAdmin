@@ -1,4 +1,4 @@
-# RegistrationAdmin — 活動報名後台（Windows）
+# RegistrationAdmin — 2026 機器狗工作坊報名後台（Windows）
 
 > **聲明**
 > - 本軟體**免費使用**，依現況（as-is）提供，不提供任何明示或默示的保證。
@@ -8,8 +8,8 @@
 >
 > *Free to use, provided as-is with no warranty; the author accepts no responsibility or liability. Developed entirely by AI. Licensed under MIT.*
 
-一個以 Google Form 回應試算表為資料來源的活動報名後台 MVP 專案。
-讀取 Google Form 連結的回應試算表，讓管理者在 Windows 程式中審核報名、核對會員、控管名額、記錄付款／發票，並匯出名單。
+依《Windows 活動報名後台系統開發規劃－2026 機器狗工作坊》v2.0 實作的 MVP 專案。
+讀取 Google Form 連結的回應試算表，讓管理者在 Windows 程式中審核報名、核對會員、控管 20 人名額、記錄付款／發票，並匯出名單。
 
 - 原始回應工作表**只讀不寫**；後台狀態與修正值只寫入同一份試算表的 `_Admin`、`_ChangeLog`。
 - 完整名單只存在記憶體與 Google Sheets，本機不建資料庫。
@@ -25,8 +25,9 @@ src/
   RegistrationAdmin.Export/         XLSX（ClosedXML）／CSV（CsvHelper）、8 種預設範本、前導零保護
   RegistrationAdmin.App/            WPF + MVVM（CommunityToolkit.Mvvm）、DI、Serilog 遮蔽日誌
 tests/
-  RegistrationAdmin.Tests/          xUnit：規則、同步、匯出與畫面狀態的單元測試
+  RegistrationAdmin.Tests/          xUnit：規劃 13 章固定測試資料 A–F、P01–P21 與 UAT 對應測試
   RegistrationAdmin.IntegrationTests/  只對複製的測試試算表執行（未設定環境變數時自動略過）
+docs/                               操作說明、開發者說明、Phase 0 決策紀錄、UAT 對照
 scripts/                            build.ps1、publish.ps1、integration-test.ps1
 ```
 
@@ -41,14 +42,27 @@ scripts/                            build.ps1、publish.ps1、integration-test.p
 
    會還原套件、建置並執行單元測試。第一次 restore 會產生各專案的 `packages.lock.json`，請一併提交以鎖定版本。
 3. 執行程式：`dotnet run --project src/RegistrationAdmin.App`，或在 Visual Studio 將 `RegistrationAdmin.App` 設為啟動專案。
-4. 產出安裝程式：`powershell -ExecutionPolicy Bypass -File .\scripts\publish.ps1` → `artifacts\installer\RegistrationAdminApp-win-Setup.exe`（Velopack；免管理員權限安裝、開始功能表與桌面捷徑、可從「應用程式」解除安裝、自動更新）。更新來源設定在 `config\update-feed.local.txt`（不進版控；範本見 `config\update-feed.txt`）。
+4. 產出未簽章本機測試安裝程式：`powershell -ExecutionPolicy Bypass -File .\scripts\publish.ps1 -NoUpload` → `artifacts\installer\RegistrationAdminApp-win-Setup.exe`（Velopack；免管理員權限安裝、開始功能表與桌面捷徑、可從「應用程式」解除安裝、自動更新）。正式發佈須選擇簽章供應者，設定與驗證流程見 [docs/release-signing.md](docs/release-signing.md)。更新來源設定在 `config\update-feed.local.txt`（不進版控；範本見 `config\update-feed.txt`）。
 
-## 基本使用
+每次打包也會產生 `artifacts\交付安裝包\<版本>\`，內含安裝程式、使用手冊 PDF、安裝說明與 SHA256 校驗碼。將整個資料夾複製給新使用者即可；GitHub 繼續發佈 Release，供已安裝的程式線上更新。資料夾交付不會改變安裝檔的簽章或免除 Windows 安全提示。整理已有的安裝檔可執行 `powershell -ExecutionPolicy Bypass -File .\scripts\prepare-handoff.ps1 -Version 0.2.3`，不會重新打包或上傳。
 
-1. **Google Cloud（只做一次）**：建立專案並啟用 Google Sheets API；OAuth 同意畫面選「外部」；建立「電腦版應用程式（Desktop app）」OAuth 用戶端並下載 JSON，另存為 `config\google-oauth-client.json`（格式見 `config\google-oauth-client.example.json`，此檔不會提交）。
-2. **連線**：開啟程式 →「設定 → 開始使用」，貼上 Google Form 回應試算表的網址，按「登入 Google 並連線」，用對該試算表有編輯權限的帳號登入。
-3. **建立管理資料區**：程式會在同一份試算表新增 `_Config`、`_FieldMap`、`_Lookups`、`_Admin`、`_ChangeLog` 分頁；原始回應頁不會被修改。若欄位對不上，請修改 `_FieldMap` 的 `source_header`。
-4. **日常**：「待處理」看需要處理的報名、點一筆審核／付款核帳後按「儲存變更」；「匯出」可輸出 Excel／CSV 名單。
+`config` 資料夾只放範本：請自行建立 Google Cloud 的 Desktop app OAuth 用戶端，下載 JSON 另存為 `config\google-oauth-client.json`（格式見 `config\google-oauth-client.example.json`；此檔已列入 `.gitignore`，不會提交）。
+
+第一次使用的 Google Cloud 設定與操作流程見 [docs/操作說明.md](docs/操作說明.md)；維護人員的部署教學見 [docs/manual/部署手冊.md](docs/manual/部署手冊.md)，行政人員的逐畫面使用手冊（含截圖）見 [docs/manual/使用手冊.md](docs/manual/使用手冊.md)，PDF 版在同一資料夾；安裝程式只附使用手冊。
+
+## 實作對照（規劃章節）
+
+| 規劃 | 實作位置 |
+|---|---|
+| 7.2–7.6 管理分頁 | `Core/Domain/*`、`GoogleSheets/SchemaManager.cs` |
+| 8.1 source_key／fingerprint | `Core/Identity/SourceIdentity.cs`、`Core/Sync/SourceParser.cs` |
+| 8.2 重新整理流程 | `Core/UseCases/RegistrationWorkspace.RefreshAsync`、`Core/Sync/SyncMerger.cs` |
+| 8.3 儲存與 row_version | `RegistrationWorkspace.SaveAsync`、`GoogleSheetsRegistrationStore.UpdateAdminRowsAsync` |
+| 9 狀態與業務規則 | `Core/Rules/*` |
+| 9.4 重複提示 | `Core/Issues/IssueDetector.cs` |
+| 10 Windows 畫面 | `App/Views/*`、`App/ViewModels/*` |
+| 11 匯出 | `Export/*` |
+| 12 日誌遮蔽 | `Core/Diagnostics/Redactor.cs`、`App/Infrastructure/AppInfrastructure.cs` |
 
 ## 已知限制
 

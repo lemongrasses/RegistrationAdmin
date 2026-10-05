@@ -30,6 +30,46 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly RegistrationWorkspace _workspace;
     private readonly IDialogService _dialogs;
     private readonly ILogger<SettingsViewModel> _logger;
+    private readonly ISpreadsheetPicker? _picker;
+    private readonly Action _saveSettings;
+    private CancellationTokenSource? _operationCancellation;
+    private bool _startupChecked;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowLoginCover))]
+    private bool _isRestoringSession = true;
+
+    public bool ShowLoginCover => !IsSignedIn && !IsRestoringSession;
+
+    /// <summary>啟動時自動恢復登入，不開啟瀏覽器；失敗才顯示登入封面。</summary>
+    public async Task RestoreSessionAsync()
+    {
+        if (_startupChecked) return;
+        _startupChecked = true;
+        try
+        {
+            var restored = false;
+            var success = await RunAsync("正在確認 Google 登入…", async ct =>
+            {
+                IsSigningIn = true;
+                using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                timeout.CancelAfter(TimeSpan.FromSeconds(30));
+                restored = await _auth.TryRestoreAsync(timeout.Token) is not null;
+                timeout.Token.ThrowIfCancellationRequested();
+                if (restored)
+                {
+                    AccountText = _auth.AccountEmail is { Length: > 0 } email ? email : "已登入 Google";
+                    StatusMessage = "已恢復登入。";
+                }
+                else StatusMessage = "";
+            });
+            if (success && restored) IsSignedIn = true;
+        }
+        finally
+        {
+            IsRestoringSession = false;
+        }
+    }
 
     public SettingsViewModel(
         LocalSettings settings,
@@ -37,7 +77,9 @@ public sealed partial class SettingsViewModel : ObservableObject
         SchemaManager schema,
         RegistrationWorkspace workspace,
         IDialogService dialogs,
-        ILogger<SettingsViewModel> logger)
+        ILogger<SettingsViewModel> logger,
+        ISpreadsheetPicker? picker = null,
+        Action? saveSettings = null)
     {
         _settings = settings;
         _auth = auth;
@@ -45,18 +87,96 @@ public sealed partial class SettingsViewModel : ObservableObject
         _workspace = workspace;
         _dialogs = dialogs;
         _logger = logger;
+        _picker = picker;
+        _saveSettings = saveSettings ?? settings.Save;
         _clientSecretPath = settings.ClientSecretPath;
         _spreadsheetInput = settings.SpreadsheetInput;
-        _accountText = settings.HasStoredToken ? "已登入過，開啟程式時會自動連線" : "尚未登入 Google";
+        _accountText = "尚未登入 Google";
     }
 
     /// <summary>設定完整且本機已有授權時，啟動後自動更新名單（不會無預警開啟瀏覽器）。</summary>
-    public bool CanAutoConnect => _settings.IsConfigured && _settings.HasStoredToken;
+    public bool CanAutoConnect => IsSignedIn && _settings.IsConfigured;
 
-    /// <summary>還沒有試算表網址：一般設定頁顯示首次設定步驟。</summary>
-    public bool NeedsSetup => SpreadsheetIdParser.Parse(SpreadsheetInput) is null;
+    public Func<bool>? CanEndSession { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanAutoConnect))]
+    [NotifyPropertyChangedFor(nameof(ShowLoginCover))]
+    [NotifyCanExecuteChangedFor(nameof(InitializeSchemaCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PickSpreadsheetCommand))]
+    private bool _isSignedIn;
+
+    partial void OnIsSignedInChanged(bool value)
+    {
+        if (value) return;
+        ClearConnection();
+    }
+
+    private void ClearConnection()
+    {
+        IsConnected = false;
+        SourceSheets.Clear();
+        SelectedSourceSheet = null;
+        SpreadsheetTitle = "尚未連線";
+        DiagnosticsText = "";
+        HealthOk = false;
+        HealthText = "連線後會自動檢查報名表的欄位。";
+    }
+
+    [RelayCommand(CanExecute = nameof(CanRun))]
+    private async Task LoginAsync()
+    {
+        var success = await RunAsync("正在登入 Google，請在預設瀏覽器完成登入…", async ct =>
+        {
+            IsSigningIn = true;
+            await _auth.GetAsync(ct);
+            ct.ThrowIfCancellationRequested();
+            AccountText = _auth.AccountEmail is { Length: > 0 } email ? email : "已登入 Google";
+            StatusMessage = "登入成功。";
+        });
+        if (success) IsSignedIn = true;
+    }
+
+    /// <summary>保留首次設定步驟直到連線成功；貼上網址並不代表已登入。</summary>
+    public bool NeedsSetup => !IsConnected;
 
     public event EventHandler? ConnectionReady;
+    public event EventHandler? SpreadsheetChanged;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanCancelOperation), nameof(CancelOperationText))]
+    [NotifyCanExecuteChangedFor(nameof(CancelLoginCommand))]
+    private bool _isPickingSpreadsheet;
+
+    public bool CanCancelOperation => IsSigningIn || IsPickingSpreadsheet;
+    public string CancelOperationText => IsPickingSpreadsheet ? "取消選擇" : "取消登入";
+
+    private bool CanPickSpreadsheet() => IsSignedIn && !IsBusy && _picker is not null;
+
+    [RelayCommand(CanExecute = nameof(CanPickSpreadsheet))]
+    private async Task PickSpreadsheetAsync()
+    {
+        if (!CanPickSpreadsheet() || CanEndSession?.Invoke() == false) return;
+        await RunAsync("正在開啟 Google 試算表選擇器，請在預設瀏覽器選擇…", async ct =>
+        {
+            IsPickingSpreadsheet = true;
+            var selected = await _picker!.PickAsync(_auth.AccountEmail ?? "", ct);
+            ct.ThrowIfCancellationRequested();
+            if (selected is null)
+            {
+                StatusMessage = "已取消選擇，原本的試算表設定仍保留。";
+                return;
+            }
+            if (selected.Id != _settings.SpreadsheetId)
+            {
+                SpreadsheetInput = $"https://docs.google.com/spreadsheets/d/{selected.Id}/edit";
+                ClearConnection();
+                SpreadsheetChanged?.Invoke(this, EventArgs.Empty);
+            }
+            SpreadsheetTitle = selected.Title;
+            StatusMessage = "已選取試算表，請按「連線試算表」確認資料與管理分頁。";
+        });
+    }
 
     public ObservableCollection<SheetInfo> SourceSheets { get; } = new();
 
@@ -75,8 +195,13 @@ public sealed partial class SettingsViewModel : ObservableObject
     private string _spreadsheetInput;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ConnectionLabel), nameof(ConnectionTone))]
+    [NotifyPropertyChangedFor(nameof(ConnectionLabel), nameof(ConnectionTone), nameof(NeedsSetup))]
     private bool _isConnected;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanCancelOperation))]
+    [NotifyCanExecuteChangedFor(nameof(CancelLoginCommand))]
+    private bool _isSigningIn;
 
     [ObservableProperty]
     private string _accountText;
@@ -107,7 +232,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private bool _isAdvancedOpen;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(ConnectCommand), nameof(InitializeSchemaCommand), nameof(SignOutCommand), nameof(ReconnectCommand))]
+    [NotifyCanExecuteChangedFor(nameof(LoginCommand), nameof(ConnectCommand), nameof(InitializeSchemaCommand), nameof(SignOutCommand), nameof(ReconnectCommand), nameof(PickSpreadsheetCommand))]
     private bool _isBusy;
 
     public string ConnectionLabel => IsConnected ? "已連線" : "未連線";
@@ -172,6 +297,11 @@ public sealed partial class SettingsViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanRun))]
     private async Task ConnectAsync()
     {
+        if (!IsSignedIn)
+        {
+            StatusMessage = "請先在登入封面登入 Google。";
+            return;
+        }
         if (SpreadsheetIdParser.Parse(SpreadsheetInput) is null)
         {
             StatusMessage = "請先貼上報名資料試算表的網址。";
@@ -179,10 +309,20 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
 
         var needsSchema = false;
-        await RunAsync("正在連線 Google（第一次會開啟瀏覽器請您登入）…", async ct =>
+        var connected = await RunAsync("正在檢查試算表連線…", async ct =>
         {
-            await _auth.GetAsync(ct);
+            IsSigningIn = true;
+            try
+            {
+                await _auth.GetAsync(ct);
+                ct.ThrowIfCancellationRequested();
+            }
+            finally
+            {
+                IsSigningIn = false;
+            }
             AccountText = _auth.AccountEmail is { Length: > 0 } email ? email : "已登入 Google";
+            StatusMessage = "已登入 Google，正在檢查試算表連線…";
             var info = await _schema.GetSpreadsheetAsync(ct);
             SpreadsheetTitle = info.Title;
             IsConnected = true;
@@ -203,11 +343,8 @@ public sealed partial class SettingsViewModel : ObservableObject
             StatusMessage = missing.Count == 0 ? "連線正常。" : "已連線，但這份試算表還沒有管理資料區。";
             _logger.LogInformation("連線成功，工作表 {Count} 張，缺少管理分頁 {Missing} 張", info.Sheets.Count, missing.Count);
 
-            if (missing.Count == 0)
-            {
-                ConnectionReady?.Invoke(this, EventArgs.Empty);
-            }
         });
+        if (connected && !needsSchema) ConnectionReady?.Invoke(this, EventArgs.Empty);
 
         // 只有一張回應工作表時不必讓使用者自己選，直接建立管理資料區（仍會先確認）。
         if (needsSchema && SourceSheets.Count == 1 && SelectedSourceSheet is not null)
@@ -225,25 +362,31 @@ public sealed partial class SettingsViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanRun))]
     private async Task ReconnectAsync()
     {
+        if (CanEndSession?.Invoke() == false) return;
         if (!_dialogs.Confirm("將登出目前的 Google 帳號，並開啟瀏覽器重新登入。可以在瀏覽器中選擇其他帳號。", "重新連線", "重新連線"))
         {
             return;
         }
 
-        await RunAsync("正在登出…", async ct =>
+        var signedOut = await RunAsync("正在登出…", async ct =>
         {
             await _auth.SignOutAsync(ct);
             IsConnected = false;
+            IsSignedIn = false;
             AccountText = "尚未登入 Google";
         });
-        await ConnectAsync();
+        if (signedOut)
+        {
+            StatusMessage = "已登出，請在封面重新登入 Google。";
+        }
     }
 
-    private bool CanInitialize() => !IsBusy && SelectedSourceSheet is not null;
+    private bool CanInitialize() => IsSignedIn && !IsBusy && SelectedSourceSheet is not null;
 
     [RelayCommand(CanExecute = nameof(CanInitialize))]
     private async Task InitializeSchemaAsync()
     {
+        if (!CanInitialize()) return;
         var source = SelectedSourceSheet;
         if (source is null)
         {
@@ -258,19 +401,20 @@ public sealed partial class SettingsViewModel : ObservableObject
             return;
         }
 
-        await RunAsync("正在建立管理資料區…", async ct =>
+        var initialized = await RunAsync("正在建立管理資料區…", async ct =>
         {
             var result = await _schema.InitializeAsync(source.SheetId, ct);
             DiagnosticsText = result.Describe();
             StatusMessage = "管理資料區已就緒，正在更新名單。";
             _logger.LogInformation("管理分頁初始化：新建 {Created} 張、補欄 {Added} 個", result.CreatedSheets.Count, result.AddedAdminColumns.Count);
-            ConnectionReady?.Invoke(this, EventArgs.Empty);
         });
+        if (initialized) ConnectionReady?.Invoke(this, EventArgs.Empty);
     }
 
     [RelayCommand(CanExecute = nameof(CanRun))]
     private async Task SignOutAsync()
     {
+        if (CanEndSession?.Invoke() == false) return;
         if (!_dialogs.Confirm("將登出目前的 Google 帳號並刪除這台電腦上的登入資料。之後需要重新登入才能讀取名單。", "登出 Google", "登出", danger: true))
         {
             return;
@@ -280,6 +424,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         {
             await _auth.SignOutAsync(ct);
             IsConnected = false;
+            IsSignedIn = false;
             AccountText = "尚未登入 Google";
             StatusMessage = "已登出。";
         });
@@ -367,25 +512,47 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
     }
 
-    private async Task RunAsync(string message, Func<CancellationToken, Task> action)
+    private bool CanCancelLogin() => CanCancelOperation && _operationCancellation is { IsCancellationRequested: false };
+
+    [RelayCommand(CanExecute = nameof(CanCancelLogin))]
+    private void CancelLogin()
     {
+        StatusMessage = IsPickingSpreadsheet ? "正在取消選擇…" : "正在取消登入…";
+        _operationCancellation?.Cancel();
+        CancelLoginCommand.NotifyCanExecuteChanged();
+    }
+
+    private async Task<bool> RunAsync(string message, Func<CancellationToken, Task> action)
+    {
+        if (IsBusy)
+        {
+            return false;
+        }
         IsBusy = true;
         StatusMessage = message;
         // 瀏覽器授權最多等待 5 分鐘，避免使用者關掉瀏覽器後程式一直等待。
         using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+        _operationCancellation = timeout;
         try
         {
             await action(timeout.Token);
+            return true;
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "設定操作失敗：{Operation}", message);
-            StatusMessage = ex is OperationCanceledException ? "登入已取消或等候逾時，請再試一次。" : UserMessages.Describe(ex);
+            StatusMessage = ex is OperationCanceledException
+                ? IsPickingSpreadsheet ? "選擇已取消或等候逾時，可以按「選擇試算表」重新嘗試。" : "登入已取消或等候逾時，可以按「登入 Google」重新嘗試。"
+                : UserMessages.Describe(ex);
             LastTechnicalError = $"{DateTime.Now:yyyy-MM-dd HH:mm}　{message}\n{ex.GetType().Name}：{Redactor.Redact(ex.Message)}";
             DiagnosticsText = LastTechnicalError;
+            return false;
         }
         finally
         {
+            _operationCancellation = null;
+            IsSigningIn = false;
+            IsPickingSpreadsheet = false;
             IsBusy = false;
         }
     }
@@ -394,7 +561,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     {
         try
         {
-            _settings.Save();
+            _saveSettings();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {

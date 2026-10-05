@@ -7,6 +7,8 @@
     <AssemblyName>RegistrationAdmin</AssemblyName>
     <AssemblyTitle>活動報名後台</AssemblyTitle>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- 程式圖示（由 assets\icon\make_icon.py 產生）；exe、捷徑、工作列都用這個 -->
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <SatelliteResourceLanguages>zh-Hant;zh-TW</SatelliteResourceLanguages>
     <!-- 自訂 Main：讓 Velopack 先處理安裝／更新事件（見 Program.cs） -->
@@ -19,6 +21,11 @@
     <PackageReference Include="Serilog.Extensions.Hosting" />
     <PackageReference Include="Serilog.Sinks.File" />
     <PackageReference Include="Velopack" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\app.ico" />
+    <EmbeddedResource Include="..\..\docs\manual\使用手冊.md" LogicalName="RegistrationAdmin.App.Help.UserManual.md" />
+    <Resource Include="..\..\docs\manual\images\*.png" Link="Help\images\%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
     <!-- 隨程式發佈的 OAuth 用戶端（Desktop app 類型）。檔案不進版控，見 .gitignore。 -->

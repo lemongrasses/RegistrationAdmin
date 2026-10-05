@@ -56,6 +56,20 @@ public sealed class RegistrationWorkspace
 
     public bool IsLoaded => LastSyncedAt.HasValue;
 
+    /// <summary>結束登入工作階段，移除上一個帳號讀取的記憶體資料。</summary>
+    public void ClearSession()
+    {
+        _registrations.Clear();
+        Config = EventConfig.Default;
+        Lookups = LookupCatalog.Default;
+        PendingRelinks = Array.Empty<PendingRelink>();
+        CollidedSources = Array.Empty<SourceResponse>();
+        CollidedKeys = new HashSet<string>();
+        Health = null;
+        SourceSheetTitle = "";
+        LastSyncedAt = null;
+    }
+
     /// <summary>不屬於任何一筆報名的問題（碰撞來源列、待人工重新連結）。</summary>
     public IReadOnlyList<Issue> UnlinkedIssues =>
         IssueDetector.ForCollidedSources(CollidedSources).Concat(IssueDetector.ForPendingRelinks(PendingRelinks)).ToList();

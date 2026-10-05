@@ -82,6 +82,7 @@ public partial class App : Application
         services.AddSingleton<GoogleSheetsAuthorizer>();
         services.AddSingleton<ISheetsServiceProvider>(sp => sp.GetRequiredService<GoogleSheetsAuthorizer>());
         services.AddSingleton<SchemaManager>();
+        services.AddSingleton<ISpreadsheetPicker, GoogleSpreadsheetPicker>();
         services.AddSingleton<IRegistrationStore, GoogleSheetsRegistrationStore>();
         services.AddSingleton<IClock, TaipeiClock>();
         services.AddSingleton<IIdGenerator, GuidIdGenerator>();

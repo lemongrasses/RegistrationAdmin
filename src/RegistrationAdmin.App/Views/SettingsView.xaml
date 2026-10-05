@@ -2,22 +2,32 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <UserControl.Resources>
+    <ResourceDictionary>
+    <ResourceDictionary.MergedDictionaries>
+      <ResourceDictionary Source="/RegistrationAdmin;component/Themes/Theme.xaml" />
+    </ResourceDictionary.MergedDictionaries>
     <Style x:Key="SettingLabel" TargetType="TextBlock">
       <Setter Property="Foreground" Value="{StaticResource SecondaryTextBrush}" />
       <Setter Property="VerticalAlignment" Value="Center" />
       <Setter Property="Margin" Value="0,0,16,0" />
     </Style>
+    </ResourceDictionary>
   </UserControl.Resources>
 
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
     <StackPanel Margin="24,20,24,96" MaxWidth="960" HorizontalAlignment="Left">
-      <TextBlock Style="{StaticResource PageTitle}" Text="設定" />
+      <DockPanel>
+        <Button DockPanel.Dock="Right" Style="{StaticResource HelpButton}" CommandParameter="1" />
+        <TextBlock Style="{StaticResource PageTitle}" Text="設定" />
+      </DockPanel>
       <TextBlock Style="{StaticResource Muted}" Text="一般使用者通常只需要確認連線狀態。" Margin="0,4,0,16" />
 
       <Border Background="{StaticResource InfoBannerBrush}" BorderBrush="{StaticResource InfoBannerBorderBrush}" BorderThickness="1" CornerRadius="10"
               Padding="14,10" Margin="0,0,0,16" Visibility="{Binding StatusMessage, Converter={StaticResource TextToVisibility}}"
               AutomationProperties.LiveSetting="Polite">
         <DockPanel>
+          <Button DockPanel.Dock="Right" Content="{Binding CancelOperationText}" Command="{Binding CancelLoginCommand}" Margin="12,0,0,0"
+                  Visibility="{Binding CanCancelOperation, Converter={StaticResource BoolToVisibility}}" />
           <ProgressBar DockPanel.Dock="Left" IsIndeterminate="True" Width="48" Height="4" Margin="0,0,12,0" VerticalAlignment="Center"
                        Foreground="{StaticResource PrimaryBrush}" Background="{StaticResource DividerBrush}" BorderThickness="0"
                        Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
@@ -29,13 +39,16 @@
       <Border Style="{StaticResource Card}" Margin="0,0,0,16" Visibility="{Binding NeedsSetup, Converter={StaticResource BoolToVisibility}}">
         <StackPanel>
           <TextBlock Style="{StaticResource SectionTitle}" Text="開始使用" />
-          <TextBlock Style="{StaticResource Hint}" Text="只需要做一次。之後開啟程式會自動連線。" />
-          <TextBlock Style="{StaticResource GroupTitle}" Text="1　貼上報名資料試算表的網址" />
-          <TextBox Text="{Binding SpreadsheetInput, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="報名資料試算表網址" />
+          <TextBlock Style="{StaticResource Hint}" Text="您已登入 Google。完成試算表設定後，之後從封面登入就會自動連線。" />
+          <TextBlock Style="{StaticResource GroupTitle}" Text="1　選擇報名資料試算表" />
+          <Button Content="選擇試算表…" Command="{Binding PickSpreadsheetCommand}" HorizontalAlignment="Left" />
+          <TextBlock Style="{StaticResource Hint}" Text="在 Windows 預設瀏覽器的 Google 選擇器中，使用相同帳號選擇有編輯權限的表單回應試算表；也可以貼上網址。" />
+          <TextBox Text="{Binding SpreadsheetInput, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="報名資料試算表網址"
+                   IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}" />
           <TextBlock Style="{StaticResource Hint}" Text="在瀏覽器開啟 Google Form 的「回應」試算表，複製網址列整段貼上。" />
-          <TextBlock Style="{StaticResource GroupTitle}" Text="2　登入 Google" />
-          <Button Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Content="登入 Google 並連線" Command="{Binding ConnectCommand}" />
-          <TextBlock Style="{StaticResource Hint}" Text="會開啟瀏覽器。請用有這份試算表編輯權限的 Google 帳號登入並按「允許」。" />
+          <TextBlock Style="{StaticResource GroupTitle}" Text="2　連線報名資料" />
+          <Button Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Content="連線試算表" Command="{Binding ConnectCommand}" />
+          <TextBlock Style="{StaticResource Hint}" Text="會檢查試算表與管理分頁。若目前帳號沒有編輯權限，請使用「重新連線」返回封面更換帳號。" />
         </StackPanel>
       </Border>
 
@@ -64,11 +77,13 @@
               <Run Text="{Binding SpreadsheetTitle, Mode=OneWay}" FontWeight="SemiBold" /><Run Text="（Google 試算表）" Foreground="{StaticResource MutedBrush}" />
             </TextBlock>
           </Grid>
-          <StackPanel Orientation="Horizontal" Margin="0,18,0,0" Visibility="{Binding NeedsSetup, Converter={StaticResource InverseBoolToVisibility}}">
-            <Button Style="{StaticResource PrimaryButton}" Content="檢查連線" Command="{Binding ConnectCommand}" Margin="0,0,8,0"
+          <WrapPanel Margin="0,18,0,0" Visibility="{Binding NeedsSetup, Converter={StaticResource InverseBoolToVisibility}}">
+            <Button Content="選擇試算表…" Command="{Binding PickSpreadsheetCommand}" Margin="0,0,8,0"
+                    ToolTip="開啟 Google 選擇器；選取後需按連線確認。取消時保留原本設定。" />
+            <Button Style="{StaticResource PrimaryButton}" Content="連線試算表" Command="{Binding ConnectCommand}" Margin="0,0,8,0"
                     ToolTip="重新讀取試算表並更新名單" />
             <Button Content="重新連線" Command="{Binding ReconnectCommand}" ToolTip="重新登入 Google，可以換成其他帳號" />
-          </StackPanel>
+          </WrapPanel>
         </StackPanel>
       </Border>
 
@@ -130,8 +145,10 @@
         <Border Style="{StaticResource Card}" Margin="0,0,0,16">
           <StackPanel>
             <TextBlock Style="{StaticResource SectionTitle}" Text="Google 登入與試算表來源" />
+            <Button Style="{StaticResource HelpButton}" CommandParameter="13" HorizontalAlignment="Left" Margin="-8,4,0,0" />
             <TextBlock Style="{StaticResource GroupTitle}" Text="試算表網址（Spreadsheet URL／ID）" />
-            <TextBox Text="{Binding SpreadsheetInput, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="試算表網址" />
+            <TextBox Text="{Binding SpreadsheetInput, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="試算表網址"
+                     IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}" />
             <TextBlock Style="{StaticResource Hint}" Text="測試時請使用複製出來的測試試算表。修改後按上方「檢查連線」。" />
 
             <TextBlock Style="{StaticResource GroupTitle}" Text="OAuth 用戶端檔" />

@@ -29,6 +29,7 @@
 
     <!-- 頁首：活動名稱與唯一主要動作 -->
     <DockPanel Margin="0,0,0,16">
+      <Button DockPanel.Dock="Right" Style="{StaticResource HelpButton}" CommandParameter="4" VerticalAlignment="Top" Margin="8,0,0,0" />
       <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" VerticalAlignment="Top" Margin="16,0,0,0"
               Command="{Binding RefreshCommand}" ToolTip="從 Google 試算表讀取最新報名（F5）" AutomationProperties.Name="更新名單">
         <StackPanel Orientation="Horizontal">

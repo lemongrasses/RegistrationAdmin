@@ -253,7 +253,11 @@
 
             <!-- 1. 會員 -->
             <StackPanel Style="{StaticResource SectionBlock}">
-              <TextBlock Style="{StaticResource GroupTitle}" Text="1　會員核對" Margin="0,0,0,8" />
+              <DockPanel Margin="0,0,0,8">
+                <Button DockPanel.Dock="Right" Style="{StaticResource HelpButton}" CommandParameter="6" />
+                <TextBlock Style="{StaticResource GroupTitle}" Text="1　會員核對" />
+              </DockPanel>
+              <TextBlock Style="{StaticResource Hint}" Text="請先依會員名冊核對；表單填寫的 Email 不代表已確認會員。" Margin="0,0,0,8" />
               <StackPanel Style="{StaticResource Field}">
                 <ComboBox ItemsSource="{Binding Options.MembershipStatuses}" DisplayMemberPath="Label" SelectedValuePath="Code"
                           SelectedValue="{Binding Edit[membership_status]}" AutomationProperties.Name="會員核對" />
@@ -290,6 +294,7 @@
             <!-- 3. 報名狀態：只顯示目前合法的下一步 -->
             <StackPanel Style="{StaticResource SectionBlock}">
               <TextBlock Style="{StaticResource GroupTitle}" Text="3　報名狀態" Margin="0,0,0,8" />
+              <TextBlock Style="{StaticResource Hint}" Text="下一步先套用到畫面，按「儲存變更」才會寫入。預設由通過待付款與已確認占用名額。" Margin="0,0,0,8" />
               <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                 <TextBlock Text="目前：" Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" />
                 <Border Style="{StaticResource Chip}" Background="{Binding StatusTone, Converter={StaticResource ToneBackground}}">
@@ -345,7 +350,11 @@
 
             <!-- 4. 付款 -->
             <StackPanel Style="{StaticResource SectionBlock}" Visibility="{Binding ShowPaymentSection, Converter={StaticResource BoolToVisibility}}">
-              <TextBlock Style="{StaticResource GroupTitle}" Text="4　付款" Margin="0,0,0,8" />
+              <DockPanel Margin="0,0,0,8">
+                <Button DockPanel.Dock="Right" Style="{StaticResource HelpButton}" CommandParameter="7" />
+                <TextBlock Style="{StaticResource GroupTitle}" Text="4　付款" />
+              </DockPanel>
+              <TextBlock Style="{StaticResource Hint}" Text="收到付款回報後仍需核帳；設為已核帳時，付款日期與核帳日期都要填寫。" Margin="0,0,0,8" />
               <StackPanel Style="{StaticResource Field}">
                 <TextBlock Style="{StaticResource FieldLabel}" Text="付款狀態" />
                 <ComboBox ItemsSource="{Binding Options.PaymentStatuses}" DisplayMemberPath="Label" SelectedValuePath="Code"
@@ -422,7 +431,10 @@
 
             <!-- 需要確認的問題 -->
             <StackPanel Style="{StaticResource SectionBlock}" Visibility="{Binding HasIssues, Converter={StaticResource BoolToVisibility}}">
-              <TextBlock Style="{StaticResource GroupTitle}" Text="需要確認的問題" Margin="0,0,0,8" />
+              <DockPanel Margin="0,0,0,8">
+                <Button DockPanel.Dock="Right" Style="{StaticResource HelpButton}" CommandParameter="9" />
+                <TextBlock Style="{StaticResource GroupTitle}" Text="需要確認的問題" />
+              </DockPanel>
               <ItemsControl ItemsSource="{Binding OpenIssues}" Focusable="False">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate>
@@ -480,6 +492,8 @@
             <!-- 低頻欄位：收合 -->
             <Expander Header="發票" Margin="0,14,0,0">
               <StackPanel Margin="0,10,0,0">
+                <Button Style="{StaticResource HelpButton}" CommandParameter="8" HorizontalAlignment="Left" />
+                <TextBlock Style="{StaticResource Hint}" Text="這裡只記錄發票處理結果，不會實際開立發票。" Margin="0,0,0,8" />
                 <TextBlock Style="{StaticResource FieldLabel}" Text="發票狀態" />
                 <ComboBox ItemsSource="{Binding Options.InvoiceStatuses}" DisplayMemberPath="Label" SelectedValuePath="Code"
                           SelectedValue="{Binding Edit[invoice_status]}" AutomationProperties.Name="發票狀態" />
@@ -501,6 +515,8 @@
 
             <Expander Header="修正報名者資料" Margin="0,10,0,0">
               <StackPanel Margin="0,10,0,0">
+                <Button Style="{StaticResource HelpButton}" CommandParameter="8" HorizontalAlignment="Left" />
+                <TextBlock Style="{StaticResource Hint}" Text="修正值優先顯示與匯出，原始表單答案保持不變；清空修正欄位可恢復採用原始值。" Margin="0,0,0,8" />
                 <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,10"
                            Text="報名者填錯時在這裡填寫正確值；左側原始答案不會被改變。清空即恢復使用原始答案。" />
                 <ItemsControl ItemsSource="{Binding OverrideFields}" Focusable="False">

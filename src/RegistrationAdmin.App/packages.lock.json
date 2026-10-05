@@ -397,7 +397,7 @@
         "dependencies": {
           "ClosedXML": "[0.104.2, )",
           "CsvHelper": "[33.0.1, )",
-          "RegistrationAdmin.Core": "[0.2.0, )"
+          "RegistrationAdmin.Core": "[0.2.3, )"
         }
       },
       "registrationadmin.googlesheets": {
@@ -405,7 +405,7 @@
         "dependencies": {
           "Google.Apis.Auth": "[1.69.0, )",
           "Google.Apis.Sheets.v4": "[1.69.0, )",
-          "RegistrationAdmin.Core": "[0.2.0, )"
+          "RegistrationAdmin.Core": "[0.2.3, )"
         }
       },
       "ClosedXML": {

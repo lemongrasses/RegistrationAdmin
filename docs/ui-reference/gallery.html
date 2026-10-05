@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>RegistrationAdmin UI 參考圖集</title>
+  <style>
+    body{margin:0;background:#eef2f6;color:#172033;font-family:"Segoe UI","Microsoft JhengHei UI",sans-serif}
+    main{max-width:1500px;margin:auto;padding:32px}h1{margin:0 0 8px}p{color:#667085;line-height:1.7}
+    nav{position:sticky;top:0;background:#eef2f6ee;padding:12px 0;backdrop-filter:blur(8px)}nav a{margin-right:18px;color:#175cd3}
+    section{background:#fff;border:1px solid #e4e7ec;border-radius:16px;padding:22px;margin:24px 0;box-shadow:0 3px 14px #10182812}
+    img{display:block;width:100%;height:auto;border:1px solid #e4e7ec;border-radius:10px;background:#f9fafb}
+    .note{padding:14px 16px;border-left:4px solid #2563eb;background:#eff6ff;border-radius:8px;color:#344054}
+  </style>
+</head>
+<body><main>
+  <h1>RegistrationAdmin UI 改版參考</h1>
+  <p>建議組合：Microsoft Lists 的名單、Airtable Record Review 的詳細頁，以及獨立的進階設定。</p>
+  <nav><a href="#list">一般名單</a><a href="#detail">單筆處理</a><a href="#settings">進階設定</a><a href="README.md">外部案例說明</a><a href="claude-ui-redesign-brief.md">Claude 改版需求</a></nav>
+  <div class="note">草圖是資訊架構參考，不要求逐像素照抄。一般模式不得出現 Google Sheet 內部名稱或技術欄位。</div>
+  <section id="list"><h2>1. 一般模式：待處理名單</h2><p>一進程式就看到工作，而不是先看到設定或複雜儀表板。</p><img src="01-general-mode.svg" alt="一般模式名單草圖"></section>
+  <section id="detail"><h2>2. 單筆報名：原始資料與後台操作分開</h2><p>左側原始答案唯讀；右側只放這筆資料可做的決定。</p><img src="02-record-detail.svg" alt="單筆報名處理草圖"></section>
+  <section id="settings"><h2>3. 設定：日常與工程選項分層</h2><p>一般使用者只需知道是否連線；OAuth、欄位映射與診斷全部收合。</p><img src="03-advanced-settings.svg" alt="進階設定草圖"></section>
+</main></body></html>

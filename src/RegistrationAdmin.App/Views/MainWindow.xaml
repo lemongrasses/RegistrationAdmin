@@ -3,7 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:RegistrationAdmin.App.Views"
         xmlns:vm="clr-namespace:RegistrationAdmin.App.ViewModels"
+        xmlns:help="clr-namespace:RegistrationAdmin.App.Views"
         Title="活動報名後台"
+        Icon="/Assets/app.ico"
         Width="1360" Height="840" MinWidth="960" MinHeight="580"
         WindowStartupLocation="CenterScreen"
         FontFamily="{StaticResource UiFont}" FontSize="14"
@@ -12,11 +14,13 @@
         UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
   <Window.InputBindings>
     <KeyBinding Key="F5" Command="{Binding RefreshCommand}" />
+    <KeyBinding Key="F1" Command="{x:Static help:HelpCommands.Open}" />
     <KeyBinding Key="S" Modifiers="Control" Command="{Binding SaveCommand}" />
     <KeyBinding Key="Left" Modifiers="Alt" Command="{Binding BackToListCommand}" />
   </Window.InputBindings>
 
   <Grid>
+  <Grid Visibility="{Binding Settings.IsSignedIn, Converter={StaticResource BoolToVisibility}}">
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="216" />
       <ColumnDefinition Width="*" />
@@ -31,6 +35,9 @@
         </StackPanel>
 
         <StackPanel DockPanel.Dock="Bottom" Margin="10,0,0,0">
+          <Button Style="{StaticResource TextButton}" Content="使用手冊（F1）" HorizontalAlignment="Left" Margin="-8,0,0,8"
+                  Command="{x:Static help:HelpCommands.Open}" CommandParameter="1"
+                  ToolTip="開啟程式內的使用手冊，可搜尋章節與查看截圖" AutomationProperties.Name="使用手冊" />
           <TextBlock Text="{Binding LastUpdatedText}" Style="{StaticResource Muted}" FontSize="13" />
           <TextBlock Text="{Binding Settings.VersionText}" Style="{StaticResource Muted}" FontSize="12" Margin="0,2,0,0" />
           <!-- 程式更新（DataContext 為 UpdateViewModel，於 MainWindow.xaml.cs 設定） -->
@@ -154,5 +161,15 @@
         </Border>
       </StackPanel>
     </Grid>
+  </Grid>
+  <views:LoginView DataContext="{Binding Settings}"
+                   Visibility="{Binding ShowLoginCover, Converter={StaticResource BoolToVisibility}}" />
+  <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+              Visibility="{Binding Settings.IsRestoringSession, Converter={StaticResource BoolToVisibility}}">
+    <TextBlock Text="活動報名後台" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" />
+    <ProgressBar IsIndeterminate="True" Width="200" Height="4" Margin="0,24,0,18"
+                 Foreground="{StaticResource PrimaryBrush}" BorderThickness="0" />
+    <TextBlock Text="正在確認 Google 登入…" Style="{StaticResource Muted}" HorizontalAlignment="Center" />
+  </StackPanel>
   </Grid>
 </Window>

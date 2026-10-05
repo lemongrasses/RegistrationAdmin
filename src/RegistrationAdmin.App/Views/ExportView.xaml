@@ -3,7 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
     <StackPanel Margin="24,20,24,96" MaxWidth="960" HorizontalAlignment="Left">
-      <TextBlock Style="{StaticResource PageTitle}" Text="匯出資料" />
+      <DockPanel>
+        <Button DockPanel.Dock="Right" Style="{StaticResource HelpButton}" CommandParameter="12" />
+        <TextBlock Style="{StaticResource PageTitle}" Text="匯出資料" />
+      </DockPanel>
       <TextBlock Style="{StaticResource Muted}" Text="選擇用途，匯出成 Excel 檔。匯出檔包含個人資料，請妥善保存。" Margin="0,4,0,16" />
 
       <Border Style="{StaticResource Card}">
@@ -60,6 +63,7 @@
           <TextBlock Style="{StaticResource GroupTitle}" Text="2　範圍" Margin="0,10,0,6" />
           <RadioButton GroupName="ExportScope" Content="全部報名（不含封存）" IsChecked="{Binding ExportCurrentFilter, Converter={StaticResource InverseBool}}" />
           <RadioButton GroupName="ExportScope" Content="{Binding CurrentFilterCountText}" IsChecked="{Binding ExportCurrentFilter}" />
+          <TextBlock Style="{StaticResource Hint}" Text="範本會再篩選符合用途的報名；儲存前請確認下方的匯出筆數。" Margin="0,4,0,0" />
 
           <TextBlock Style="{StaticResource GroupTitle}" Text="3　檔案格式" Margin="0,16,0,6" />
           <RadioButton GroupName="ExportFormat" Content="Excel 活頁簿（.xlsx，建議）" IsChecked="{Binding ExportAsCsv, Converter={StaticResource InverseBool}}" />
@@ -67,9 +71,9 @@
 
           <Expander Header="進階選項" Margin="0,16,0,0">
             <StackPanel Margin="0,8,0,0">
-              <CheckBox Content="包含聯絡方式、統編與付款欄位" IsChecked="{Binding ExportIncludeSensitive}" />
+              <CheckBox Content="包含聯絡方式、統編與付款欄位" IsChecked="{Binding ExportIncludeSensitive}" ToolTip="取消勾選後，不輸出 Email、電話、統編與付款識別等敏感欄位。" />
               <CheckBox Content="包含報名者備註與得知管道" IsChecked="{Binding ExportIncludeApplicantNotes}" />
-              <CheckBox Content="使用原始答案（不套用後台修正）" IsChecked="{Binding ExportRawValues}" />
+              <CheckBox Content="使用原始答案（不套用後台修正）" IsChecked="{Binding ExportRawValues}" ToolTip="預設採用後台修正後的有效值；勾選後改用表單原始回答，後台狀態仍會保留。" />
             </StackPanel>
           </Expander>
 

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+  <defs><style>.ui{font-family:"Segoe UI","Microsoft JhengHei UI",sans-serif;fill:#172033}.muted{fill:#667085}.h1{font-size:26px;font-weight:700}.h2{font-size:18px;font-weight:650}.body{font-size:14px}.small{font-size:12px}.label{font-size:12px;fill:#667085}.line{stroke:#E4E7EC;stroke-width:1}.chip{font-size:12px;font-weight:650}</style><filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="5" flood-color="#101828" flood-opacity="0.08"/></filter></defs>
+  <rect width="1440" height="900" fill="#F6F8FB"/>
+  <rect width="220" height="900" fill="#fff"/><line x1="220" y1="0" x2="220" y2="900" class="line"/>
+  <circle cx="38" cy="42" r="18" fill="#2563EB"/><path d="M29 43h18M38 34v18" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+  <text x="66" y="39" class="ui h2">活動報名後台</text><text x="66" y="58" class="ui small muted">一般模式</text>
+  <text x="52" y="120" class="ui body muted">待處理</text><text x="52" y="172" class="ui body muted">全部名單</text><text x="52" y="224" class="ui body muted">匯出資料</text>
+  <line x1="24" y1="268" x2="196" y2="268" class="line"/><rect x="16" y="284" width="188" height="44" rx="8" fill="#EAF2FF"/><rect x="16" y="284" width="4" height="44" rx="2" fill="#2563EB"/><text x="52" y="312" class="ui body" fill="#1849A9">設定</text>
+
+  <text x="260" y="52" class="ui h1">設定</text><text x="260" y="78" class="ui body muted">一般使用者通常只需要確認連線狀態。</text>
+  <rect x="260" y="108" width="190" height="42" rx="8" fill="#2563EB"/><text x="323" y="134" font-family="Segoe UI,Microsoft JhengHei UI" font-size="14" font-weight="650" fill="#fff">一般</text>
+  <rect x="458" y="108" width="190" height="42" rx="8" fill="#fff" stroke="#D0D5DD"/><text x="495" y="134" class="ui body">進階（管理員）</text>
+
+  <rect x="260" y="176" width="1140" height="198" rx="12" fill="#fff" filter="url(#s)"/>
+  <text x="288" y="214" class="ui h2">Google 連線</text>
+  <circle cx="300" cy="252" r="9" fill="#12B76A"/><text x="322" y="258" class="ui body" font-weight="650">已連線</text><text x="394" y="258" class="ui body muted">manager@example.com</text>
+  <text x="288" y="302" class="ui label">報名資料</text><text x="288" y="328" class="ui body">2026 機器狗工作坊（Google 試算表）</text>
+  <rect x="1138" y="222" width="112" height="40" rx="8" fill="#fff" stroke="#D0D5DD"/><text x="1162" y="247" class="ui body">檢查連線</text>
+  <rect x="1262" y="222" width="110" height="40" rx="8" fill="#fff" stroke="#D0D5DD"/><text x="1287" y="247" class="ui body">重新連線</text>
+
+  <rect x="260" y="398" width="1140" height="136" rx="12" fill="#fff" filter="url(#s)"/>
+  <text x="288" y="438" class="ui h2">資料保護</text><rect x="1210" y="418" width="162" height="28" rx="14" fill="#ECFDF3"/><text x="1230" y="437" class="ui chip" fill="#067647">原始回應保持唯讀</text>
+  <text x="288" y="474" class="ui body">程式只讀取 Google Form 原始回應；後台狀態與備註會寫入獨立的管理分頁。</text>
+  <text x="288" y="504" class="ui small muted">最後檢查：今天 10:32　沒有發現欄位或資料結構問題。</text>
+
+  <rect x="260" y="558" width="1140" height="246" rx="12" fill="#fff" filter="url(#s)"/>
+  <text x="288" y="598" class="ui h2">進階（管理員）</text><text x="288" y="626" class="ui body muted">這些設定通常不需要修改。錯誤設定可能讓系統無法讀取報名資料。</text>
+  <rect x="288" y="654" width="1084" height="50" rx="8" fill="#F9FAFB" stroke="#E4E7EC"/><text x="308" y="684" class="ui body">Google OAuth 與試算表來源</text><text x="1342" y="684" class="ui body muted">›</text>
+  <rect x="288" y="714" width="1084" height="50" rx="8" fill="#F9FAFB" stroke="#E4E7EC"/><text x="308" y="744" class="ui body">欄位對應與管理資料區</text><text x="1342" y="744" class="ui body muted">›</text>
+  <rect x="288" y="774" width="1084" height="50" rx="8" fill="#F9FAFB" stroke="#E4E7EC"/><text x="308" y="804" class="ui body">診斷資訊與日誌</text><text x="1342" y="804" class="ui body muted">›</text>
+  <text x="260" y="862" class="ui small muted">版本 0.1.0　·　需要協助時才展開進階設定</text>
+</svg>

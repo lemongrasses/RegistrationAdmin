@@ -70,6 +70,7 @@ internal sealed record Harness(MainViewModel Main, FakeStore Store, Registration
         var auth = new OfflineAuth();
         var settings = new SettingsViewModel(local, auth, new SchemaManager(auth, local), workspace, dialogs,
             NullLogger<SettingsViewModel>.Instance);
+        settings.IsSignedIn = true; // 此 harness 專門驗證登入後的報名操作。
         var main = new MainViewModel(workspace, settings, dialogs, NullLogger<MainViewModel>.Instance, () => Now);
         await main.RefreshCommand.ExecuteAsync(null);
         return new Harness(main, store, workspace, dialogs);
